@@ -28,11 +28,12 @@ class BaseSqfEntityController<T extends TableBase> extends GetxController {
     fetchModels();
   }
 
-  Future<T> addGetModel(T model) async {
-    T saved = await model.save();
+  Future<int> addGetModel(T model) async {
+    int saved = await model.save();
     fetchModels();
     return saved;
   }
+
   // Update model
   Future<void> updateModel(T model) async {
     await model.save();
@@ -107,6 +108,13 @@ class ProductController extends BaseSqfEntityController<Product> {
   Future<void> deleteById(int id) async {
     await Product().select().id.equals(id).delete();
     await fetchModels();
+  }
+
+  void onProuctSale(List<Product> products, List<int> quantities) {
+    products.asMap().forEach((index, product) async {
+      product.quantity = product.quantity! - quantities[index];
+      await product.save();
+    });
   }
 
   void resetSelected() {
@@ -249,7 +257,7 @@ class OrderController extends BaseSqfEntityController<Order> {
 
   @override
   Future<void> fetchModels() async {
-    models.value = await Order().select().toList();
+    models.value = await Order().select().toList(preload: true);
     resetSelected();
     return super.fetchModels();
   }
@@ -265,17 +273,17 @@ class OrderController extends BaseSqfEntityController<Order> {
 
   void decrementQuantity(int index) {
     if (selectedItems[index].quantity != null &&
-        selectedItems[index].quantity! > 0) {
+        selectedItems[index].quantity! > 1) {
       selectedItems[index].quantity = selectedItems[index].quantity! - 1;
     }
   }
 
-  Future<void> onItemSelectedSave(Sale sale) async {
+  Future<void> onItemSelectedSave(int sale) async {
     for (final model in selectedItems) {
-      model.salesId = sale.id;
+      model.salesId = sale;
       await model.save();
     }
-    fetchModels();
+    await fetchModels();
   }
 
   void resetSelected() {
@@ -298,7 +306,7 @@ class InvoiceController extends BaseSqfEntityController<Invoice> {
 
   @override
   Future<void> fetchModels() async {
-    models.value = await Invoice().select().toList();
+    models.value = await Invoice().select().toList(preload: true);
     resetSelected();
     return super.fetchModels();
   }
@@ -385,10 +393,16 @@ class ExpenseController extends BaseSqfEntityController<Expense> {
 class SaleController extends BaseSqfEntityController<Sale> {
   RxBool isSelected = false.obs;
   RxList selectedID = [].obs;
+  RxList<Sale> selectedSale = <Sale>[].obs;
+
+  Future<void> fetchByDate(DateTime date) async {
+    selectedSale.value =
+        await Sale().select().
+  }
 
   @override
   Future<void> fetchModels() async {
-    models.value = await Sale().select().toList();
+    models.value = await Sale().select().toList(preload: true);
     resetSelected();
     return super.fetchModels();
   }

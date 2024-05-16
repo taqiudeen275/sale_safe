@@ -22,3 +22,13 @@ List<Product> findProductContainingValue(String input, List<Product> data) {
   return resultTables;
 }
 
+String formatDateTime(DateTime dateTime, {bool dateOnly = false}) {
+  String formattedDate = '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
+
+  if (dateOnly) {
+    return formattedDate;
+  } else {
+    String formattedTime = '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+    return '$formattedDate $formattedTime';
+  }
+}

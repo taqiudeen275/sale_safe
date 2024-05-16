@@ -43,8 +43,7 @@ class _OrderPickState extends State<OrderPick> {
                     icon: const Icon(Iconsax.close_circle),
                     onPressed: () {
                       _productSearchController.text = "";
-                    productController.searchQuery.value = "";
-
+                      productController.searchQuery.value = "";
                     },
                   ),
                   placeholder: "Product Search",
@@ -231,7 +230,7 @@ class _OrderPickState extends State<OrderPick> {
                                         fontSize: 24,
                                       )),
                                   Text(
-                                    "TOTAL: GH¢ ${orderController.selectedItems.fold(0.0, (sum, product) => sum + (product.amount! * product.quantity!)).toString()}",
+                                    "TOTAL: GH¢ ${orderController.selectedItems.fold(0.0, (sum, order) => sum + (order.amount! + sum)).toString()}",
                                     style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold),
@@ -302,6 +301,9 @@ class _OrderPickState extends State<OrderPick> {
                                                           orderController
                                                               .decrementQuantity(
                                                                   index);
+                                                          order.amount = (product
+                                                                  .price! *
+                                                              order.quantity!);
                                                         });
                                                       }),
                                                   Padding(
@@ -323,6 +325,10 @@ class _OrderPickState extends State<OrderPick> {
                                                           orderController
                                                               .incrementQuantity(
                                                                   index);
+                                                                 order.quantity! > 0?
+                                                          order.amount = (product
+                                                                  .price! *
+                                                              order.quantity!): order.amount;
                                                         });
                                                       }),
                                                 ],

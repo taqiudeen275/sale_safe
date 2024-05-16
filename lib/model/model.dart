@@ -124,6 +124,11 @@ const tableOrders = SqfEntityTable(
     primaryKeyType: PrimaryKeyType.integer_auto_incremental,
     useSoftDeleting: true,
     fields: [
+       SqfEntityFieldRelationship(
+          parentTable: tableSales,
+          deleteRule: DeleteRule.CASCADE,
+          relationType: RelationType.ONE_TO_MANY,
+          defaultValue: 0),
       SqfEntityFieldRelationship(
           parentTable: tableProduct,
           relationType: RelationType.ONE_TO_MANY,
@@ -205,11 +210,7 @@ const tableSales = SqfEntityTable(
     primaryKeyType: PrimaryKeyType.integer_auto_incremental,
     useSoftDeleting: true,
     fields: [
-      SqfEntityFieldRelationship(
-          parentTable: tableOrders,
-          deleteRule: DeleteRule.CASCADE,
-          relationType: RelationType.MANY_TO_MANY,
-          defaultValue: 0),
+     
       SqfEntityField("date", DbType.datetime),
       SqfEntityField("isCredit", DbType.bool),
       SqfEntityField("amount", DbType.real),

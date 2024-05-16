@@ -28,6 +28,11 @@ class BaseSqfEntityController<T extends TableBase> extends GetxController {
     fetchModels();
   }
 
+  Future<T> addGetModel(T model) async {
+    T saved = await model.save();
+    fetchModels();
+    return saved;
+  }
   // Update model
   Future<void> updateModel(T model) async {
     await model.save();
@@ -256,22 +261,23 @@ class OrderController extends BaseSqfEntityController<Order> {
 
   void incrementQuantity(int index) {
     selectedItems[index].quantity = (selectedItems[index].quantity ?? 0) + 1;
-
   }
 
   void decrementQuantity(int index) {
     if (selectedItems[index].quantity != null &&
         selectedItems[index].quantity! > 0) {
       selectedItems[index].quantity = selectedItems[index].quantity! - 1;
-      
     }
   }
 
-Future<void> onItemSelectedSave() async {
+  Future<void> onItemSelectedSave(Sale sale) async {
     for (final model in selectedItems) {
-      await addModel(model);
+      model.salesId = sale.id;
+      await model.save();
     }
+    fetchModels();
   }
+
   void resetSelected() {
     isSelected.value = false;
     selectedID.value = [];
@@ -396,8 +402,6 @@ class SaleController extends BaseSqfEntityController<Sale> {
     isSelected.value = false;
     selectedID.value = [];
   }
-
-
 
   Future<void> deleteBulkByID(List modelsToDelete) async {
     for (final model in modelsToDelete) {

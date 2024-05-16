@@ -33,41 +33,50 @@ class _SalesScreenState extends State<SalesScreen> {
                           Navigator.pop(context);
                         }),
                     Obx(() => Row(
-                      children: [
-                        const Text("Credit Sale"),
-                        const SizedBox(width: 10,),
-
-                        ToggleSwitch(
-                          checked: isCredit.value,
-                          onChanged:  productController.selectedItems.isEmpty
-                                  ? null: (bool value) {
-                            isCredit.value = value;
-                            
-                          },
-                        ),
-                        const SizedBox(width: 20,),
-                        Expanded(
-                          child: FilledButton(
-                              onPressed: productController.selectedItems.isEmpty
+                          children: [
+                            const Text("Credit Sale"),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            ToggleSwitch(
+                              checked: isCredit.value,
+                              onChanged: productController.selectedItems.isEmpty
                                   ? null
-                                  : () async {
-                                      await orderController.onItemSelectedSave();
-                                      Sale saleAdded = Sale(
-                                        isCredit: isCredit.value,
-                                          date: DateTime.now(),
-                                          amount: orderController.selectedItems
-                                              .fold(
-                                                  0.0,
-                                                  (sum, product) =>
-                                                      sum! +
-                                                      (product.amount! *
-                                                          product.quantity!)));
-                                      await salesController.addModel(saleAdded);
+                                  : (bool value) {
+                                      isCredit.value = value;
                                     },
-                              child: const Text("Record Sale")),
-                        ),
-                      ],
-                    )),
+                            ),
+                            const SizedBox(
+                              width: 20,
+                            ),
+                            Expanded(
+                              child: FilledButton(
+                                  onPressed: productController
+                                          .selectedItems.isEmpty
+                                      ? null
+                                      : () async {
+                                          Sale saleAdded = await salesController
+                                              .addGetModel(Sale(
+                                                  isCredit: isCredit.value,
+                                                  date: DateTime.now(),
+                                                  
+                                                  amount: orderController
+                                                      .selectedItems
+                                                      .fold(
+                                                          0.0,
+                                                          (sum, product) =>
+                                                              sum! +
+                                                              (product.amount! *
+                                                                  product
+                                                                      .quantity!))));
+                                          await orderController
+                                              .onItemSelectedSave(saleAdded);
+
+                                        },
+                                  child: const Text("Record Sale")),
+                            ),
+                          ],
+                        )),
                   ]);
                 },
                 child: const Text("Select Product"))

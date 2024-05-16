@@ -302,10 +302,6 @@ class TableSale extends SqfEntityTableBase {
 
     // declare fields
     fields = [
-      SqfEntityFieldRelationshipBase(TableOrder.getInstance, DeleteRule.CASCADE,
-          relationType: RelationType.ONE_TO_MANY,
-          fieldName: 'ordersId',
-          defaultValue: 0),
       SqfEntityFieldBase('date', DbType.datetime,
           minValue: DateTime.parse('1900-01-01')),
       SqfEntityFieldBase('isCredit', DbType.bool),
@@ -428,6 +424,35 @@ class TableUser extends SqfEntityTableBase {
     return _instance = _instance ?? TableUser();
   }
 }
+
+// SalesOrders TABLE
+class TableSalesOrders extends SqfEntityTableBase {
+  TableSalesOrders() {
+    // declare properties of EntityTable
+    tableName = 'salesOrders';
+    relationType = RelationType.MANY_TO_MANY;
+    primaryKeyName = '';
+    useSoftDeleting = true;
+    // when useSoftDeleting is true, creates a field named 'isDeleted' on the table, and set to '1' this field when item deleted (does not hard delete)
+
+    // declare fields
+    fields = [
+      SqfEntityFieldRelationshipBase(TableOrder.getInstance, DeleteRule.CASCADE,
+          relationType: RelationType.ONE_TO_MANY,
+          fieldName: 'ordersId',
+          isPrimaryKeyField: true),
+      SqfEntityFieldRelationshipBase(TableSale.getInstance, DeleteRule.CASCADE,
+          relationType: RelationType.ONE_TO_MANY,
+          fieldName: 'salesId',
+          isPrimaryKeyField: true),
+    ];
+    super.init();
+  }
+  static SqfEntityTableBase? _instance;
+  static SqfEntityTableBase get getInstance {
+    return _instance = _instance ?? TableSalesOrders();
+  }
+}
 // END TABLES
 
 // BEGIN SEQUENCES
@@ -473,6 +498,7 @@ class SalesSafeDbModel extends SqfEntityModelProvider {
       TableExpense.getInstance,
       TableProfitAndLoss.getInstance,
       TableUser.getInstance,
+      TableSalesOrders.getInstance,
     ];
 
     sequences = [
@@ -483,7 +509,11 @@ class SalesSafeDbModel extends SqfEntityModelProvider {
         .bundledDatabasePath; //'assets/sample.db'; // This value is optional. When bundledDatabasePath is empty then EntityBase creats a new database when initializing the database
     databasePath = myDbModel.databasePath;
   }
- 
+  Map<String, dynamic> getControllers() {
+    final controllers = <String, dynamic>{};
+
+    return controllers;
+  }
 }
 // END DATABASE MODEL
 
@@ -6730,20 +6760,17 @@ class Order extends TableBase {
   // END RELATIONSHIPS (Order)
 
 // COLLECTIONS & VIRTUALS (Order)
-  /// to load children of items to this field, use preload parameter. Ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
+  ///(RelationType.MANY_TO_MANY) (salesOrders) to load children of items to this field, use preload parameter. Ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
   /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plSales', 'plField2'..]) or so on..
   List<Sale>? plSales;
 
-  /// get Sale(s) filtered by id=ordersId
+  /// get Sale(s) filtered by salesId IN salesOrders
   SaleFilterBuilder? getSales(
       {List<String>? columnsToSelect, bool? getIsDeleted}) {
-    if (id == null) {
-      return null;
-    }
     return Sale()
         .select(columnsToSelect: columnsToSelect, getIsDeleted: getIsDeleted)
-        .ordersId
-        .equals(id)
+        .where('id IN (SELECT salesId FROM salesOrders WHERE ordersId=?)',
+            parameterValue: id)
         .and;
   }
 
@@ -7079,13 +7106,6 @@ class Order extends TableBase {
   @override
   Future<BoolResult> delete([bool hardDelete = false]) async {
     debugPrint('SQFENTITIY: delete Order invoked (id=$id)');
-    var result = BoolResult(success: false);
-    {
-      result = await Sale().select().ordersId.equals(id).and.delete(hardDelete);
-    }
-    if (!result.success) {
-      return result;
-    }
     if (!_softDeleteActivated || hardDelete || isDeleted!) {
       return _mnOrder
           .delete(QueryParams(whereString: 'id=?', whereArguments: [id]));
@@ -7379,16 +7399,6 @@ class OrderFilterBuilder extends ConjunctionBase {
   Future<BoolResult> delete([bool hardDelete = false]) async {
     buildParameters();
     var r = BoolResult(success: false);
-    // Delete sub records where in (Sale) according to DeleteRule.CASCADE
-    final idListSaleBYordersId = toListPrimaryKeySQL(false);
-    final resSaleBYordersId = await Sale()
-        .select()
-        .where('ordersId IN (${idListSaleBYordersId['sql']})',
-            parameterValue: idListSaleBYordersId['args'])
-        .delete(hardDelete);
-    if (!resSaleBYordersId.success) {
-      return resSaleBYordersId;
-    }
 
     if (_softDeleteActivated && !hardDelete) {
       r = await _mnOrder!.updateBatch(qparams, {'isDeleted': 1});
@@ -10072,22 +10082,14 @@ class PaymentManager extends SqfEntityProvider {
 //endregion PaymentManager
 // region Sale
 class Sale extends TableBase {
-  Sale(
-      {this.id,
-      this.ordersId,
-      this.date,
-      this.isCredit,
-      this.amount,
-      this.isDeleted}) {
+  Sale({this.id, this.date, this.isCredit, this.amount, this.isDeleted}) {
     _setDefaultValues();
     softDeleteActivated = true;
   }
-  Sale.withFields(
-      this.ordersId, this.date, this.isCredit, this.amount, this.isDeleted) {
+  Sale.withFields(this.date, this.isCredit, this.amount, this.isDeleted) {
     _setDefaultValues();
   }
-  Sale.withId(this.id, this.ordersId, this.date, this.isCredit, this.amount,
-      this.isDeleted) {
+  Sale.withId(this.id, this.date, this.isCredit, this.amount, this.isDeleted) {
     _setDefaultValues();
   }
   // fromMap v2.0
@@ -10096,8 +10098,6 @@ class Sale extends TableBase {
       _setDefaultValues();
     }
     id = int.tryParse(o['id'].toString());
-    ordersId = int.tryParse(o['ordersId'].toString());
-
     if (o['date'] != null) {
       date = int.tryParse(o['date'].toString()) != null
           ? DateTime.fromMillisecondsSinceEpoch(
@@ -10114,16 +10114,9 @@ class Sale extends TableBase {
     isDeleted = o['isDeleted'] != null
         ? o['isDeleted'] == 1 || o['isDeleted'] == true
         : null;
-
-    // RELATIONSHIPS FromMAP
-    plOrder = o['order'] != null
-        ? Order.fromMap(o['order'] as Map<String, dynamic>)
-        : null;
-    // END RELATIONSHIPS FromMAP
   }
   // FIELDS (Sale)
   int? id;
-  int? ordersId;
   DateTime? date;
   bool? isCredit;
   double? amount;
@@ -10131,21 +10124,21 @@ class Sale extends TableBase {
 
   // end FIELDS (Sale)
 
-// RELATIONSHIPS (Sale)
-  /// to load parent of items to this field, use preload parameter ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
-  /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plOrder', 'plField2'..]) or so on..
-  Order? plOrder;
-
-  /// get Order By OrdersId
-  Future<Order?> getOrder(
-      {bool loadParents = false, List<String>? loadedFields}) async {
-    final _obj = await Order().getById(ordersId,
-        loadParents: loadParents, loadedFields: loadedFields);
-    return _obj;
-  }
-  // END RELATIONSHIPS (Sale)
-
 // COLLECTIONS & VIRTUALS (Sale)
+  ///(RelationType.MANY_TO_MANY) (salesOrders) to load children of items to this field, use preload parameter. Ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
+  /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plOrders', 'plField2'..]) or so on..
+  List<Order>? plOrders;
+
+  /// get Order(s) filtered by ordersId IN salesOrders
+  OrderFilterBuilder? getOrders(
+      {List<String>? columnsToSelect, bool? getIsDeleted}) {
+    return Order()
+        .select(columnsToSelect: columnsToSelect, getIsDeleted: getIsDeleted)
+        .where('id IN (SELECT ordersId FROM salesOrders WHERE salesId=?)',
+            parameterValue: id)
+        .and;
+  }
+
   /// to load children of items to this field, use preload parameter. Ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
   /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plInvoices', 'plField2'..]) or so on..
   List<Invoice>? plInvoices;
@@ -10178,15 +10171,6 @@ class Sale extends TableBase {
       {bool forQuery = false, bool forJson = false, bool forView = false}) {
     final map = <String, dynamic>{};
     map['id'] = id;
-    if (ordersId != null) {
-      map['ordersId'] = forView
-          ? plOrder == null
-              ? ordersId
-              : plOrder!.id
-          : ordersId;
-    } else if (ordersId != null || !forView) {
-      map['ordersId'] = null;
-    }
     if (date != null) {
       map['date'] = forJson
           ? date!.toString()
@@ -10218,15 +10202,6 @@ class Sale extends TableBase {
       bool forView = false]) async {
     final map = <String, dynamic>{};
     map['id'] = id;
-    if (ordersId != null) {
-      map['ordersId'] = forView
-          ? plOrder == null
-              ? ordersId
-              : plOrder!.id
-          : ordersId;
-    } else if (ordersId != null || !forView) {
-      map['ordersId'] = null;
-    }
     if (date != null) {
       map['date'] = forJson
           ? date!.toString()
@@ -10250,6 +10225,9 @@ class Sale extends TableBase {
 
 // COLLECTIONS (Sale)
     if (!forQuery) {
+      map['Orders'] = await getOrders()!.toMapList();
+    }
+    if (!forQuery) {
       map['Invoices'] = await getInvoices()!.toMapList();
     }
 // END COLLECTIONS (Sale)
@@ -10272,7 +10250,6 @@ class Sale extends TableBase {
   @override
   List<dynamic> toArgs() {
     return [
-      ordersId,
       date != null ? date!.millisecondsSinceEpoch : null,
       isCredit,
       amount,
@@ -10284,7 +10261,6 @@ class Sale extends TableBase {
   List<dynamic> toArgsWithIds() {
     return [
       id,
-      ordersId,
       date != null ? date!.millisecondsSinceEpoch : null,
       isCredit,
       amount,
@@ -10338,6 +10314,16 @@ class Sale extends TableBase {
       // RELATIONSHIPS PRELOAD CHILD
       if (preload) {
         loadedFields = loadedFields ?? [];
+        if (/*!_loadedfields!.contains('sales.plOrders') && */ (preloadFields ==
+                null ||
+            preloadFields.contains('plOrders'))) {
+          /*_loadedfields!.add('sales.plOrders'); */ obj.plOrders =
+              obj.plOrders ??
+                  await obj.getOrders()!.toList(
+                      preload: preload,
+                      preloadFields: preloadFields,
+                      loadParents: false /*, loadedFields:_loadedFields*/);
+        }
         if (/*!_loadedfields!.contains('sales.plInvoices') && */ (preloadFields ==
                 null ||
             preloadFields.contains('plInvoices'))) {
@@ -10349,17 +10335,6 @@ class Sale extends TableBase {
                       loadParents: false /*, loadedFields:_loadedFields*/);
         }
       } // END RELATIONSHIPS PRELOAD CHILD
-
-      // RELATIONSHIPS PRELOAD
-      if (preload || loadParents) {
-        loadedFields = loadedFields ?? [];
-        if ((preloadFields == null ||
-            loadParents ||
-            preloadFields.contains('plOrder'))) {
-          obj.plOrder =
-              obj.plOrder ?? await obj.getOrder(loadParents: loadParents);
-        }
-      } // END RELATIONSHIPS PRELOAD
 
       objList.add(obj);
     }
@@ -10391,6 +10366,16 @@ class Sale extends TableBase {
       // RELATIONSHIPS PRELOAD CHILD
       if (preload) {
         loadedFields = loadedFields ?? [];
+        if (/*!_loadedfields!.contains('sales.plOrders') && */ (preloadFields ==
+                null ||
+            preloadFields.contains('plOrders'))) {
+          /*_loadedfields!.add('sales.plOrders'); */ obj.plOrders =
+              obj.plOrders ??
+                  await obj.getOrders()!.toList(
+                      preload: preload,
+                      preloadFields: preloadFields,
+                      loadParents: false /*, loadedFields:_loadedFields*/);
+        }
         if (/*!_loadedfields!.contains('sales.plInvoices') && */ (preloadFields ==
                 null ||
             preloadFields.contains('plInvoices'))) {
@@ -10402,17 +10387,6 @@ class Sale extends TableBase {
                       loadParents: false /*, loadedFields:_loadedFields*/);
         }
       } // END RELATIONSHIPS PRELOAD CHILD
-
-      // RELATIONSHIPS PRELOAD
-      if (preload || loadParents) {
-        loadedFields = loadedFields ?? [];
-        if ((preloadFields == null ||
-            loadParents ||
-            preloadFields.contains('plOrder'))) {
-          obj.plOrder =
-              obj.plOrder ?? await obj.getOrder(loadParents: loadParents);
-        }
-      } // END RELATIONSHIPS PRELOAD
     } else {
       obj = null;
     }
@@ -10490,10 +10464,9 @@ class Sale extends TableBase {
   Future<int?> upsert({bool ignoreBatch = true}) async {
     try {
       final result = await _mnSale.rawInsert(
-          'INSERT OR REPLACE INTO sales (id, ordersId, date, isCredit, amount,isDeleted)  VALUES (?,?,?,?,?,?)',
+          'INSERT OR REPLACE INTO sales (id, date, isCredit, amount,isDeleted)  VALUES (?,?,?,?,?)',
           [
             id,
-            ordersId,
             date != null ? date!.millisecondsSinceEpoch : null,
             isCredit,
             amount,
@@ -10523,7 +10496,7 @@ class Sale extends TableBase {
   Future<BoolCommitResult> upsertAll(List<Sale> sales,
       {bool? exclusive, bool? noResult, bool? continueOnError}) async {
     final results = await _mnSale.rawInsertAll(
-        'INSERT OR REPLACE INTO sales (id, ordersId, date, isCredit, amount,isDeleted)  VALUES (?,?,?,?,?,?)',
+        'INSERT OR REPLACE INTO sales (id, date, isCredit, amount,isDeleted)  VALUES (?,?,?,?,?)',
         sales,
         exclusive: exclusive,
         noResult: noResult,
@@ -10562,6 +10535,20 @@ class Sale extends TableBase {
   Future<BoolResult> recover([bool recoverChilds = true]) async {
     debugPrint('SQFENTITIY: recover Sale invoked (id=$id)');
     var result = BoolResult(success: false);
+    if (recoverChilds) {
+      result = await Order()
+          .select(getIsDeleted: true)
+          .isDeleted
+          .equals(true)
+          .and
+          .salesId
+          .equals(id)
+          .and
+          .update({'isDeleted': 0});
+    }
+    if (!result.success && recoverChilds) {
+      return result;
+    }
     if (recoverChilds) {
       result = await Invoice()
           .select(getIsDeleted: true)
@@ -10811,11 +10798,6 @@ class SaleFilterBuilder extends ConjunctionBase {
     return _id = _setField(_id, 'id', DbType.integer);
   }
 
-  SaleField? _ordersId;
-  SaleField get ordersId {
-    return _ordersId = _setField(_ordersId, 'ordersId', DbType.integer);
-  }
-
   SaleField? _date;
   SaleField get date {
     return _date = _setField(_date, 'date', DbType.datetime);
@@ -10867,7 +10849,17 @@ class SaleFilterBuilder extends ConjunctionBase {
   Future<BoolResult> recover() async {
     buildParameters(getIsDeleted: true);
     debugPrint('SQFENTITIY: recover Sale bulk invoked');
-    // Recover sub records where in (Invoice) according to DeleteRule.CASCADE
+    // Recover sub records where in (Order) according to DeleteRule.CASCADE
+    final idListOrderBYsalesId = toListPrimaryKeySQL(false);
+    final resOrderBYsalesId = await Order()
+        .select()
+        .where('salesId IN (${idListOrderBYsalesId['sql']})',
+            parameterValue: idListOrderBYsalesId['args'])
+        .update({'isDeleted': 0});
+    if (!resOrderBYsalesId.success) {
+      return resOrderBYsalesId;
+    }
+// Recover sub records where in (Invoice) according to DeleteRule.CASCADE
     final idListInvoiceBYsalesId = toListPrimaryKeySQL(false);
     final resInvoiceBYsalesId = await Invoice()
         .select()
@@ -10917,6 +10909,16 @@ class SaleFilterBuilder extends ConjunctionBase {
       // RELATIONSHIPS PRELOAD CHILD
       if (preload) {
         loadedFields = loadedFields ?? [];
+        if (/*!_loadedfields!.contains('sales.plOrders') && */ (preloadFields ==
+                null ||
+            preloadFields.contains('plOrders'))) {
+          /*_loadedfields!.add('sales.plOrders'); */ obj.plOrders =
+              obj.plOrders ??
+                  await obj.getOrders()!.toList(
+                      preload: preload,
+                      preloadFields: preloadFields,
+                      loadParents: false /*, loadedFields:_loadedFields*/);
+        }
         if (/*!_loadedfields!.contains('sales.plInvoices') && */ (preloadFields ==
                 null ||
             preloadFields.contains('plInvoices'))) {
@@ -10928,17 +10930,6 @@ class SaleFilterBuilder extends ConjunctionBase {
                       loadParents: false /*, loadedFields:_loadedFields*/);
         }
       } // END RELATIONSHIPS PRELOAD CHILD
-
-      // RELATIONSHIPS PRELOAD
-      if (preload || loadParents) {
-        loadedFields = loadedFields ?? [];
-        if ((preloadFields == null ||
-            loadParents ||
-            preloadFields.contains('plOrder'))) {
-          obj.plOrder =
-              obj.plOrder ?? await obj.getOrder(loadParents: loadParents);
-        }
-      } // END RELATIONSHIPS PRELOAD
     } else {
       obj = null;
     }
@@ -11112,12 +11103,6 @@ class SaleFields {
   static TableField? _fId;
   static TableField get id {
     return _fId = _fId ?? SqlSyntax.setField(_fId, 'id', DbType.integer);
-  }
-
-  static TableField? _fOrdersId;
-  static TableField get ordersId {
-    return _fOrdersId = _fOrdersId ??
-        SqlSyntax.setField(_fOrdersId, 'ordersId', DbType.integer);
   }
 
   static TableField? _fDate;
@@ -14824,6 +14809,909 @@ class UserManager extends SqfEntityProvider {
 }
 
 //endregion UserManager
+// region SalesOrders
+class SalesOrders extends TableBase {
+  SalesOrders({this.ordersId, this.salesId, this.isDeleted}) {
+    _setDefaultValues();
+    softDeleteActivated = true;
+  }
+  SalesOrders.withFields(this.ordersId, this.salesId, this.isDeleted) {
+    _setDefaultValues();
+  }
+  SalesOrders.withId(this.ordersId, this.salesId, this.isDeleted) {
+    _setDefaultValues();
+  }
+  // fromMap v2.0
+  SalesOrders.fromMap(Map<String, dynamic> o, {bool setDefaultValues = true}) {
+    if (setDefaultValues) {
+      _setDefaultValues();
+    }
+    ordersId = int.tryParse(o['ordersId'].toString());
+
+    salesId = int.tryParse(o['salesId'].toString());
+
+    isDeleted = o['isDeleted'] != null
+        ? o['isDeleted'] == 1 || o['isDeleted'] == true
+        : null;
+
+    // RELATIONSHIPS FromMAP
+    plOrder = o['order'] != null
+        ? Order.fromMap(o['order'] as Map<String, dynamic>)
+        : null;
+    plSale = o['sale'] != null
+        ? Sale.fromMap(o['sale'] as Map<String, dynamic>)
+        : null;
+    // END RELATIONSHIPS FromMAP
+
+    isSaved = true;
+  }
+  // FIELDS (SalesOrders)
+  int? ordersId;
+  int? salesId;
+  bool? isDeleted;
+  bool? isSaved;
+  // end FIELDS (SalesOrders)
+
+// RELATIONSHIPS (SalesOrders)
+  /// to load parent of items to this field, use preload parameter ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
+  /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plOrder', 'plField2'..]) or so on..
+  Order? plOrder;
+
+  /// get Order By OrdersId
+  Future<Order?> getOrder(
+      {bool loadParents = false, List<String>? loadedFields}) async {
+    final _obj = await Order().getById(ordersId,
+        loadParents: loadParents, loadedFields: loadedFields);
+    return _obj;
+  }
+
+  /// to load parent of items to this field, use preload parameter ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
+  /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plSale', 'plField2'..]) or so on..
+  Sale? plSale;
+
+  /// get Sale By SalesId
+  Future<Sale?> getSale(
+      {bool loadParents = false, List<String>? loadedFields}) async {
+    final _obj = await Sale()
+        .getById(salesId, loadParents: loadParents, loadedFields: loadedFields);
+    return _obj;
+  }
+  // END RELATIONSHIPS (SalesOrders)
+
+  static const bool _softDeleteActivated = true;
+  SalesOrdersManager? __mnSalesOrders;
+
+  SalesOrdersManager get _mnSalesOrders {
+    return __mnSalesOrders = __mnSalesOrders ?? SalesOrdersManager();
+  }
+
+  // METHODS
+  @override
+  Map<String, dynamic> toMap(
+      {bool forQuery = false, bool forJson = false, bool forView = false}) {
+    final map = <String, dynamic>{};
+    if (ordersId != null) {
+      map['ordersId'] = forView
+          ? plOrder == null
+              ? ordersId
+              : plOrder!.id
+          : ordersId;
+    } else if (ordersId != null || !forView) {
+      map['ordersId'] = null;
+    }
+    if (salesId != null) {
+      map['salesId'] = forView
+          ? plSale == null
+              ? salesId
+              : plSale!.id
+          : salesId;
+    } else if (salesId != null || !forView) {
+      map['salesId'] = null;
+    }
+    if (isDeleted != null) {
+      map['isDeleted'] = forQuery ? (isDeleted! ? 1 : 0) : isDeleted;
+    }
+
+    return map;
+  }
+
+  @override
+  Future<Map<String, dynamic>> toMapWithChildren(
+      [bool forQuery = false,
+      bool forJson = false,
+      bool forView = false]) async {
+    final map = <String, dynamic>{};
+    if (ordersId != null) {
+      map['ordersId'] = forView
+          ? plOrder == null
+              ? ordersId
+              : plOrder!.id
+          : ordersId;
+    } else if (ordersId != null || !forView) {
+      map['ordersId'] = null;
+    }
+    if (salesId != null) {
+      map['salesId'] = forView
+          ? plSale == null
+              ? salesId
+              : plSale!.id
+          : salesId;
+    } else if (salesId != null || !forView) {
+      map['salesId'] = null;
+    }
+    if (isDeleted != null) {
+      map['isDeleted'] = forQuery ? (isDeleted! ? 1 : 0) : isDeleted;
+    }
+
+    return map;
+  }
+
+  /// This method returns Json String [SalesOrders]
+  @override
+  String toJson() {
+    return json.encode(toMap(forJson: true));
+  }
+
+  /// This method returns Json String [SalesOrders]
+  @override
+  Future<String> toJsonWithChilds() async {
+    return json.encode(await toMapWithChildren(false, true));
+  }
+
+  @override
+  List<dynamic> toArgs() {
+    return [ordersId, salesId, isDeleted];
+  }
+
+  @override
+  List<dynamic> toArgsWithIds() {
+    return [ordersId, salesId, isDeleted];
+  }
+
+  static Future<List<SalesOrders>?> fromWebUrl(Uri uri,
+      {Map<String, String>? headers}) async {
+    try {
+      final response = await http.get(uri, headers: headers);
+      return await fromJson(response.body);
+    } catch (e) {
+      debugPrint(
+          'SQFENTITY ERROR SalesOrders.fromWebUrl: ErrorMessage: ${e.toString()}');
+      return null;
+    }
+  }
+
+  Future<http.Response> postUrl(Uri uri, {Map<String, String>? headers}) {
+    return http.post(uri, headers: headers, body: toJson());
+  }
+
+  static Future<List<SalesOrders>> fromJson(String jsonBody) async {
+    final Iterable list = await json.decode(jsonBody) as Iterable;
+    var objList = <SalesOrders>[];
+    try {
+      objList = list
+          .map((salesorders) =>
+              SalesOrders.fromMap(salesorders as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint(
+          'SQFENTITY ERROR SalesOrders.fromJson: ErrorMessage: ${e.toString()}');
+    }
+    return objList;
+  }
+
+  static Future<List<SalesOrders>> fromMapList(List<dynamic> data,
+      {bool preload = false,
+      List<String>? preloadFields,
+      bool loadParents = false,
+      List<String>? loadedFields,
+      bool setDefaultValues = true}) async {
+    final List<SalesOrders> objList = <SalesOrders>[];
+    loadedFields = loadedFields ?? [];
+    for (final map in data) {
+      final obj = SalesOrders.fromMap(map as Map<String, dynamic>,
+          setDefaultValues: setDefaultValues);
+      // final List<String> _loadedFields = List<String>.from(loadedFields);
+
+      // RELATIONSHIPS PRELOAD
+      if (preload || loadParents) {
+        loadedFields = loadedFields ?? [];
+        if ((preloadFields == null ||
+            loadParents ||
+            preloadFields.contains('plOrder'))) {
+          obj.plOrder =
+              obj.plOrder ?? await obj.getOrder(loadParents: loadParents);
+        }
+        if ((preloadFields == null ||
+            loadParents ||
+            preloadFields.contains('plSale'))) {
+          obj.plSale =
+              obj.plSale ?? await obj.getSale(loadParents: loadParents);
+        }
+      } // END RELATIONSHIPS PRELOAD
+
+      objList.add(obj);
+    }
+    return objList;
+  }
+
+  /// returns SalesOrders by ID if exist, otherwise returns null
+  /// Primary Keys: int? ordersId, int? salesId
+  /// bool preload: if true, loads all related child objects (Set preload to true if you want to load all fields related to child or parent)
+  /// ex: getById(preload:true) -> Loads all related objects
+  /// List<String> preloadFields: specify the fields you want to preload (preload parameter's value should also be "true")
+  /// ex: getById(preload:true, preloadFields:['plField1','plField2'... etc])  -> Loads only certain fields what you specified
+  /// bool loadParents: if true, loads all parent objects until the object has no parent
+
+  /// <returns>returns [SalesOrders] if exist, otherwise returns null
+  Future<SalesOrders?> getById(int? ordersId, int? salesId,
+      {bool preload = false,
+      List<String>? preloadFields,
+      bool loadParents = false,
+      List<String>? loadedFields}) async {
+    if (ordersId == null) {
+      return null;
+    }
+    SalesOrders? obj;
+    final data = await _mnSalesOrders.getById([ordersId, salesId]);
+    if (data.length != 0) {
+      obj = SalesOrders.fromMap(data[0] as Map<String, dynamic>);
+
+      // RELATIONSHIPS PRELOAD
+      if (preload || loadParents) {
+        loadedFields = loadedFields ?? [];
+        if ((preloadFields == null ||
+            loadParents ||
+            preloadFields.contains('plOrder'))) {
+          obj.plOrder =
+              obj.plOrder ?? await obj.getOrder(loadParents: loadParents);
+        }
+        if ((preloadFields == null ||
+            loadParents ||
+            preloadFields.contains('plSale'))) {
+          obj.plSale =
+              obj.plSale ?? await obj.getSale(loadParents: loadParents);
+        }
+      } // END RELATIONSHIPS PRELOAD
+    } else {
+      obj = null;
+    }
+    return obj;
+  }
+
+  /// Saves the (SalesOrders) object. If the Primary Key (ordersId) field is null, returns Error.
+  /// INSERTS (If not exist) OR REPLACES (If exist) data while Primary Key is not null.
+  /// Call the saveAs() method if you do not want to save it when there is another row with the same ordersId
+  /// <returns>Returns BoolResult
+  @override
+  Future<BoolResult> save({bool ignoreBatch = true}) async {
+    final result = BoolResult(success: false);
+    try {
+      await _mnSalesOrders.rawInsert(
+          'INSERT ${isSaved! ? 'OR REPLACE' : ''} INTO salesOrders ( ordersId, salesId,isDeleted)  VALUES (?,?)',
+          toArgsWithIds(),
+          ignoreBatch);
+      result.success = true;
+      isSaved = true;
+    } catch (e) {
+      result.errorMessage = e.toString();
+    }
+
+    saveResult = result;
+    return result;
+  }
+
+  /// saveAll method saves the sent List<SalesOrders> as a bulk in one transaction
+  /// Returns a <List<BoolResult>>
+  static Future<List<dynamic>> saveAll(List<SalesOrders> salesorderses,
+      {bool? exclusive, bool? noResult, bool? continueOnError}) async {
+    List<dynamic>? result = [];
+    // If there is no open transaction, start one
+    final isStartedBatch = await SalesSafeDbModel().batchStart();
+    for (final obj in salesorderses) {
+      await obj.save();
+    }
+    if (!isStartedBatch) {
+      result = await SalesSafeDbModel().batchCommit(
+          exclusive: exclusive,
+          noResult: noResult,
+          continueOnError: continueOnError);
+    }
+    return result!;
+  }
+
+  /// Updates if the record exists, otherwise adds a new row
+  /// <returns>Returns 1
+  @override
+  Future<int?> upsert({bool ignoreBatch = true}) async {
+    try {
+      final result = await _mnSalesOrders.rawInsert(
+          'INSERT OR REPLACE INTO salesOrders ( ordersId, salesId,isDeleted)  VALUES (?,?)',
+          [ordersId, salesId, isDeleted],
+          ignoreBatch);
+      if (result! > 0) {
+        saveResult = BoolResult(
+            success: true,
+            successMessage:
+                'SalesOrders ordersId=$ordersId updated successfully');
+      } else {
+        saveResult = BoolResult(
+            success: false,
+            errorMessage: 'SalesOrders ordersId=$ordersId did not update');
+      }
+      return ordersId;
+    } catch (e) {
+      saveResult = BoolResult(
+          success: false,
+          errorMessage: 'SalesOrders Save failed. Error: ${e.toString()}');
+      return null;
+    }
+  }
+
+  /// inserts or replaces the sent List<<SalesOrders>> as a bulk in one transaction.
+  /// upsertAll() method is faster then saveAll() method. upsertAll() should be used when you are sure that the primary key is greater than zero
+  /// Returns a BoolCommitResult
+  @override
+  Future<BoolCommitResult> upsertAll(List<SalesOrders> salesorderses,
+      {bool? exclusive, bool? noResult, bool? continueOnError}) async {
+    final results = await _mnSalesOrders.rawInsertAll(
+        'INSERT OR REPLACE INTO salesOrders ( ordersId, salesId,isDeleted)  VALUES (?,?)',
+        salesorderses,
+        exclusive: exclusive,
+        noResult: noResult,
+        continueOnError: continueOnError);
+    return results;
+  }
+
+  /// Deletes SalesOrders
+
+  /// <returns>BoolResult res.success= true (Deleted), false (Could not be deleted)
+  @override
+  Future<BoolResult> delete([bool hardDelete = false]) async {
+    debugPrint('SQFENTITIY: delete SalesOrders invoked (ordersId=$ordersId)');
+    if (!_softDeleteActivated || hardDelete || isDeleted!) {
+      return _mnSalesOrders.delete(QueryParams(
+          whereString: 'ordersId=? AND salesId=?',
+          whereArguments: [ordersId, salesId]));
+    } else {
+      return _mnSalesOrders.updateBatch(
+          QueryParams(
+              whereString: 'ordersId=? AND salesId=?',
+              whereArguments: [ordersId, salesId]),
+          {'isDeleted': 1});
+    }
+  }
+
+  /// Recover SalesOrders
+
+  /// <returns>BoolResult res.success=Recovered, not res.success=Can not recovered
+  @override
+  Future<BoolResult> recover([bool recoverChilds = true]) async {
+    debugPrint('SQFENTITIY: recover SalesOrders invoked (ordersId=$ordersId)');
+    {
+      return _mnSalesOrders.updateBatch(
+          QueryParams(
+              whereString: 'ordersId=? AND salesId=?',
+              whereArguments: [ordersId, salesId]),
+          {'isDeleted': 0});
+    }
+  }
+
+  @override
+  SalesOrdersFilterBuilder select(
+      {List<String>? columnsToSelect, bool? getIsDeleted}) {
+    return SalesOrdersFilterBuilder(this, getIsDeleted)
+      ..qparams.selectColumns = columnsToSelect;
+  }
+
+  @override
+  SalesOrdersFilterBuilder distinct(
+      {List<String>? columnsToSelect, bool? getIsDeleted}) {
+    return SalesOrdersFilterBuilder(this, getIsDeleted)
+      ..qparams.selectColumns = columnsToSelect
+      ..qparams.distinct = true;
+  }
+
+  void _setDefaultValues() {
+    isSaved = false;
+    isDeleted = isDeleted ?? false;
+  }
+
+  @override
+  void rollbackPk() {
+    if (isInsert == true) {
+      ordersId = null;
+      salesId = null;
+    }
+  }
+
+  // END METHODS
+  // BEGIN CUSTOM CODE
+  /*
+      you can define customCode property of your SqfEntityTable constant. For example:
+      const tablePerson = SqfEntityTable(
+      tableName: 'person',
+      primaryKeyName: 'id',
+      primaryKeyType: PrimaryKeyType.integer_auto_incremental,
+      fields: [
+        SqfEntityField('firstName', DbType.text),
+        SqfEntityField('lastName', DbType.text),
+      ],
+      customCode: '''
+       String fullName()
+       { 
+         return '$firstName $lastName';
+       }
+      ''');
+     */
+  // END CUSTOM CODE
+}
+// endregion salesorders
+
+// region SalesOrdersField
+class SalesOrdersField extends FilterBase {
+  SalesOrdersField(SalesOrdersFilterBuilder salesordersFB)
+      : super(salesordersFB);
+
+  @override
+  SalesOrdersFilterBuilder equals(dynamic pValue) {
+    return super.equals(pValue) as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersFilterBuilder equalsOrNull(dynamic pValue) {
+    return super.equalsOrNull(pValue) as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersFilterBuilder isNull() {
+    return super.isNull() as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersFilterBuilder contains(dynamic pValue) {
+    return super.contains(pValue) as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersFilterBuilder startsWith(dynamic pValue) {
+    return super.startsWith(pValue) as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersFilterBuilder endsWith(dynamic pValue) {
+    return super.endsWith(pValue) as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersFilterBuilder between(dynamic pFirst, dynamic pLast) {
+    return super.between(pFirst, pLast) as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersFilterBuilder greaterThan(dynamic pValue) {
+    return super.greaterThan(pValue) as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersFilterBuilder lessThan(dynamic pValue) {
+    return super.lessThan(pValue) as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersFilterBuilder greaterThanOrEquals(dynamic pValue) {
+    return super.greaterThanOrEquals(pValue) as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersFilterBuilder lessThanOrEquals(dynamic pValue) {
+    return super.lessThanOrEquals(pValue) as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersFilterBuilder inValues(dynamic pValue) {
+    return super.inValues(pValue) as SalesOrdersFilterBuilder;
+  }
+
+  @override
+  SalesOrdersField get not {
+    return super.not as SalesOrdersField;
+  }
+}
+// endregion SalesOrdersField
+
+// region SalesOrdersFilterBuilder
+class SalesOrdersFilterBuilder extends ConjunctionBase {
+  SalesOrdersFilterBuilder(SalesOrders obj, bool? getIsDeleted)
+      : super(obj, getIsDeleted) {
+    _mnSalesOrders = obj._mnSalesOrders;
+    _softDeleteActivated = obj.softDeleteActivated;
+  }
+
+  bool _softDeleteActivated = false;
+  SalesOrdersManager? _mnSalesOrders;
+
+  /// put the sql keyword 'AND'
+  @override
+  SalesOrdersFilterBuilder get and {
+    super.and;
+    return this;
+  }
+
+  /// put the sql keyword 'OR'
+  @override
+  SalesOrdersFilterBuilder get or {
+    super.or;
+    return this;
+  }
+
+  /// open parentheses
+  @override
+  SalesOrdersFilterBuilder get startBlock {
+    super.startBlock;
+    return this;
+  }
+
+  /// String whereCriteria, write raw query without 'where' keyword. Like this: 'field1 like 'test%' and field2 = 3'
+  @override
+  SalesOrdersFilterBuilder where(String? whereCriteria,
+      {dynamic parameterValue}) {
+    super.where(whereCriteria, parameterValue: parameterValue);
+    return this;
+  }
+
+  /// page = page number,
+  /// pagesize = row(s) per page
+  @override
+  SalesOrdersFilterBuilder page(int page, int pagesize) {
+    super.page(page, pagesize);
+    return this;
+  }
+
+  /// int count = LIMIT
+  @override
+  SalesOrdersFilterBuilder top(int count) {
+    super.top(count);
+    return this;
+  }
+
+  /// close parentheses
+  @override
+  SalesOrdersFilterBuilder get endBlock {
+    super.endBlock;
+    return this;
+  }
+
+  /// argFields might be String or List<String>.
+  /// Example 1: argFields='name, date'
+  /// Example 2: argFields = ['name', 'date']
+  @override
+  SalesOrdersFilterBuilder orderBy(dynamic argFields) {
+    super.orderBy(argFields);
+    return this;
+  }
+
+  /// argFields might be String or List<String>.
+  /// Example 1: argFields='field1, field2'
+  /// Example 2: argFields = ['field1', 'field2']
+  @override
+  SalesOrdersFilterBuilder orderByDesc(dynamic argFields) {
+    super.orderByDesc(argFields);
+    return this;
+  }
+
+  /// argFields might be String or List<String>.
+  /// Example 1: argFields='field1, field2'
+  /// Example 2: argFields = ['field1', 'field2']
+  @override
+  SalesOrdersFilterBuilder groupBy(dynamic argFields) {
+    super.groupBy(argFields);
+    return this;
+  }
+
+  /// argFields might be String or List<String>.
+  /// Example 1: argFields='name, date'
+  /// Example 2: argFields = ['name', 'date']
+  @override
+  SalesOrdersFilterBuilder having(dynamic argFields) {
+    super.having(argFields);
+    return this;
+  }
+
+  SalesOrdersField _setField(
+      SalesOrdersField? field, String colName, DbType dbtype) {
+    return SalesOrdersField(this)
+      ..param = DbParameter(
+          dbType: dbtype, columnName: colName, wStartBlock: openedBlock);
+  }
+
+  SalesOrdersField? _ordersId;
+  SalesOrdersField get ordersId {
+    return _ordersId = _setField(_ordersId, 'ordersId', DbType.integer);
+  }
+
+  SalesOrdersField? _salesId;
+  SalesOrdersField get salesId {
+    return _salesId = _setField(_salesId, 'salesId', DbType.integer);
+  }
+
+  SalesOrdersField? _isDeleted;
+  SalesOrdersField get isDeleted {
+    return _isDeleted = _setField(_isDeleted, 'isDeleted', DbType.bool);
+  }
+
+  /// Deletes List<SalesOrders> bulk by query
+  ///
+  /// <returns>BoolResult res.success= true (Deleted), false (Could not be deleted)
+  @override
+  Future<BoolResult> delete([bool hardDelete = false]) async {
+    buildParameters();
+    var r = BoolResult(success: false);
+
+    if (_softDeleteActivated && !hardDelete) {
+      r = await _mnSalesOrders!.updateBatch(qparams, {'isDeleted': 1});
+    } else {
+      r = await _mnSalesOrders!.delete(qparams);
+    }
+    return r;
+  }
+
+  /// Recover List<SalesOrders> bulk by query
+  @override
+  Future<BoolResult> recover() async {
+    buildParameters(getIsDeleted: true);
+    debugPrint('SQFENTITIY: recover SalesOrders bulk invoked');
+    return _mnSalesOrders!.updateBatch(qparams, {'isDeleted': 0});
+  }
+
+  /// using:
+  /// update({'fieldName': Value})
+  /// fieldName must be String. Value is dynamic, it can be any of the (int, bool, String.. )
+  @override
+  Future<BoolResult> update(Map<String, dynamic> values) {
+    buildParameters();
+    if (qparams.limit! > 0 || qparams.offset! > 0) {
+      qparams.whereString =
+          'ordersId IN (SELECT ordersId from salesOrders ${qparams.whereString!.isNotEmpty ? 'WHERE ${qparams.whereString}' : ''}${qparams.limit! > 0 ? ' LIMIT ${qparams.limit}' : ''}${qparams.offset! > 0 ? ' OFFSET ${qparams.offset}' : ''})';
+    }
+    return _mnSalesOrders!.updateBatch(qparams, values);
+  }
+
+  /// This method always returns [SalesOrders] Obj if exist, otherwise returns null
+  /// bool preload: if true, loads all related child objects (Set preload to true if you want to load all fields related to child or parent)
+  /// ex: toSingle(preload:true) -> Loads all related objects
+  /// List<String> preloadFields: specify the fields you want to preload (preload parameter's value should also be "true")
+  /// ex: toSingle(preload:true, preloadFields:['plField1','plField2'... etc])  -> Loads only certain fields what you specified
+  /// bool loadParents: if true, loads all parent objects until the object has no parent
+
+  /// <returns> SalesOrders?
+  @override
+  Future<SalesOrders?> toSingle(
+      {bool preload = false,
+      List<String>? preloadFields,
+      bool loadParents = false,
+      List<String>? loadedFields}) async {
+    buildParameters(pSize: 1);
+    final objFuture = _mnSalesOrders!.toList(qparams);
+    final data = await objFuture;
+    SalesOrders? obj;
+    if (data.isNotEmpty) {
+      obj = SalesOrders.fromMap(data[0] as Map<String, dynamic>);
+
+      // RELATIONSHIPS PRELOAD
+      if (preload || loadParents) {
+        loadedFields = loadedFields ?? [];
+        if ((preloadFields == null ||
+            loadParents ||
+            preloadFields.contains('plOrder'))) {
+          obj.plOrder =
+              obj.plOrder ?? await obj.getOrder(loadParents: loadParents);
+        }
+        if ((preloadFields == null ||
+            loadParents ||
+            preloadFields.contains('plSale'))) {
+          obj.plSale =
+              obj.plSale ?? await obj.getSale(loadParents: loadParents);
+        }
+      } // END RELATIONSHIPS PRELOAD
+    } else {
+      obj = null;
+    }
+    return obj;
+  }
+
+  /// This method always returns [SalesOrders]
+  /// bool preload: if true, loads all related child objects (Set preload to true if you want to load all fields related to child or parent)
+  /// ex: toSingle(preload:true) -> Loads all related objects
+  /// List<String> preloadFields: specify the fields you want to preload (preload parameter's value should also be "true")
+  /// ex: toSingle(preload:true, preloadFields:['plField1','plField2'... etc])  -> Loads only certain fields what you specified
+  /// bool loadParents: if true, loads all parent objects until the object has no parent
+
+  /// <returns> SalesOrders?
+  @override
+  Future<SalesOrders> toSingleOrDefault(
+      {bool preload = false,
+      List<String>? preloadFields,
+      bool loadParents = false,
+      List<String>? loadedFields}) async {
+    return await toSingle(
+            preload: preload,
+            preloadFields: preloadFields,
+            loadParents: loadParents,
+            loadedFields: loadedFields) ??
+        SalesOrders();
+  }
+
+  /// This method returns int. [SalesOrders]
+  /// <returns>int
+  @override
+  Future<int> toCount([VoidCallback Function(int c)? salesordersCount]) async {
+    buildParameters();
+    qparams.selectColumns = ['COUNT(1) AS CNT'];
+    final salesordersesFuture = await _mnSalesOrders!.toList(qparams);
+    final int count = salesordersesFuture[0]['CNT'] as int;
+    if (salesordersCount != null) {
+      salesordersCount(count);
+    }
+    return count;
+  }
+
+  /// This method returns List<SalesOrders> [SalesOrders]
+  /// bool preload: if true, loads all related child objects (Set preload to true if you want to load all fields related to child or parent)
+  /// ex: toList(preload:true) -> Loads all related objects
+  /// List<String> preloadFields: specify the fields you want to preload (preload parameter's value should also be "true")
+  /// ex: toList(preload:true, preloadFields:['plField1','plField2'... etc])  -> Loads only certain fields what you specified
+  /// bool loadParents: if true, loads all parent objects until the object has no parent
+
+  /// <returns>List<SalesOrders>
+  @override
+  Future<List<SalesOrders>> toList(
+      {bool preload = false,
+      List<String>? preloadFields,
+      bool loadParents = false,
+      List<String>? loadedFields}) async {
+    final data = await toMapList();
+    final List<SalesOrders> salesordersesData = await SalesOrders.fromMapList(
+        data,
+        preload: preload,
+        preloadFields: preloadFields,
+        loadParents: loadParents,
+        loadedFields: loadedFields,
+        setDefaultValues: qparams.selectColumns == null);
+    return salesordersesData;
+  }
+
+  /// This method returns Json String [SalesOrders]
+  @override
+  Future<String> toJson() async {
+    final list = <dynamic>[];
+    final data = await toList();
+    for (var o in data) {
+      list.add(o.toMap(forJson: true));
+    }
+    return json.encode(list);
+  }
+
+  /// This method returns Json String. [SalesOrders]
+  @override
+  Future<String> toJsonWithChilds() async {
+    final list = <dynamic>[];
+    final data = await toList();
+    for (var o in data) {
+      list.add(await o.toMapWithChildren(false, true));
+    }
+    return json.encode(list);
+  }
+
+  /// This method returns List<dynamic>. [SalesOrders]
+  /// <returns>List<dynamic>
+  @override
+  Future<List<dynamic>> toMapList() async {
+    buildParameters();
+    return await _mnSalesOrders!.toList(qparams);
+  }
+
+  /// This method returns Primary Key List SQL and Parameters retVal = Map<String,dynamic>. [SalesOrders]
+  /// retVal['sql'] = SQL statement string, retVal['args'] = whereArguments List<dynamic>;
+  /// <returns>List<String>
+  @override
+  Map<String, dynamic> toListPrimaryKeySQL([bool buildParams = true]) {
+    final Map<String, dynamic> _retVal = <String, dynamic>{};
+    if (buildParams) {
+      buildParameters();
+    }
+    _retVal['sql'] =
+        'SELECT `ordersId`salesId` FROM salesOrders WHERE ${qparams.whereString}';
+    _retVal['args'] = qparams.whereArguments;
+    return _retVal;
+  }
+
+  /// This method returns Primary Key List<ordersId,salesId> [SalesOrders]
+  /// <returns>List<ordersId,salesId>
+  @override
+  Future<List<SalesOrders>> toListPrimaryKey([bool buildParams = true]) async {
+    if (buildParams) {
+      buildParameters();
+    }
+    qparams.selectColumns = ['ordersId', 'salesId'];
+    final salesordersFuture = await _mnSalesOrders!.toList(qparams);
+    return await SalesOrders.fromMapList(salesordersFuture);
+  }
+
+  /// Returns List<dynamic> for selected columns. Use this method for 'groupBy' with min,max,avg..  [SalesOrders]
+  /// Sample usage: (see EXAMPLE 4.2 at https://github.com/hhtokpinar/sqfEntity#group-by)
+  @override
+  Future<List<dynamic>> toListObject() async {
+    buildParameters();
+
+    final objectFuture = _mnSalesOrders!.toList(qparams);
+
+    final List<dynamic> objectsData = <dynamic>[];
+    final data = await objectFuture;
+    final int count = data.length;
+    for (int i = 0; i < count; i++) {
+      objectsData.add(data[i]);
+    }
+    return objectsData;
+  }
+
+  /// Returns List<String> for selected first column
+  /// Sample usage: await SalesOrders.select(columnsToSelect: ['columnName']).toListString()
+  @override
+  Future<List<String>> toListString(
+      [VoidCallback Function(List<String> o)? listString]) async {
+    buildParameters();
+
+    final objectFuture = _mnSalesOrders!.toList(qparams);
+
+    final List<String> objectsData = <String>[];
+    final data = await objectFuture;
+    final int count = data.length;
+    for (int i = 0; i < count; i++) {
+      objectsData.add(data[i][qparams.selectColumns![0]].toString());
+    }
+    if (listString != null) {
+      listString(objectsData);
+    }
+    return objectsData;
+  }
+}
+// endregion SalesOrdersFilterBuilder
+
+// region SalesOrdersFields
+class SalesOrdersFields {
+  static TableField? _fOrdersId;
+  static TableField get ordersId {
+    return _fOrdersId = _fOrdersId ??
+        SqlSyntax.setField(_fOrdersId, 'ordersId', DbType.integer);
+  }
+
+  static TableField? _fSalesId;
+  static TableField get salesId {
+    return _fSalesId =
+        _fSalesId ?? SqlSyntax.setField(_fSalesId, 'salesId', DbType.integer);
+  }
+
+  static TableField? _fIsDeleted;
+  static TableField get isDeleted {
+    return _fIsDeleted = _fIsDeleted ??
+        SqlSyntax.setField(_fIsDeleted, 'isDeleted', DbType.integer);
+  }
+}
+// endregion SalesOrdersFields
+
+//region SalesOrdersManager
+class SalesOrdersManager extends SqfEntityProvider {
+  SalesOrdersManager()
+      : super(SalesSafeDbModel(),
+            tableName: _tableName,
+            primaryKeyList: _primaryKeyList,
+            whereStr: _whereStr);
+  static const String _tableName = 'salesOrders';
+  static const List<String> _primaryKeyList = ['ordersId', 'salesId'];
+  static const String _whereStr = 'ordersId=? AND salesId=?';
+}
+
+//endregion SalesOrdersManager
 /// Region SEQUENCE IdentitySequence
 class IdentitySequence {
   /// Assigns a new value when it is triggered and returns the new value

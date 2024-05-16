@@ -208,7 +208,7 @@ const tableSales = SqfEntityTable(
       SqfEntityFieldRelationship(
           parentTable: tableOrders,
           deleteRule: DeleteRule.CASCADE,
-          relationType: RelationType.ONE_TO_MANY,
+          relationType: RelationType.MANY_TO_MANY,
           defaultValue: 0),
       SqfEntityField("date", DbType.datetime),
       SqfEntityField("isCredit", DbType.bool),

@@ -267,6 +267,11 @@ class OrderController extends BaseSqfEntityController<Order> {
     }
   }
 
+Future<void> onItemSelectedSave() async {
+    for (final model in selectedItems) {
+      await addModel(model);
+    }
+  }
   void resetSelected() {
     isSelected.value = false;
     selectedID.value = [];
@@ -391,6 +396,8 @@ class SaleController extends BaseSqfEntityController<Sale> {
     isSelected.value = false;
     selectedID.value = [];
   }
+
+
 
   Future<void> deleteBulkByID(List modelsToDelete) async {
     for (final model in modelsToDelete) {

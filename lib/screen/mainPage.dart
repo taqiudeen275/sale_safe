@@ -1,10 +1,10 @@
 // ignore: file_names
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:sale_safe/screen/expense.dart';
 import 'package:sale_safe/screen/inventory.dart';
 import 'package:sale_safe/screen/sales.dart';
-
-
+import 'package:sale_safe/screen/suppliers.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -27,12 +27,16 @@ class _MainPageState extends State<MainPage> {
         body: const ProductScreen()),
     PaneItem(
         title: const Text('Sales'),
-        icon:  const Icon(Iconsax.dollar_square),
-        body:  SalesScreen()),
+        icon: const Icon(Iconsax.dollar_square),
+        body: SalesScreen()),
     PaneItem(
         title: const Text('Expense'),
         icon: const Icon(Iconsax.receipt),
-        body: const Placeholder()),
+        body: ExpenseScreen()),
+    PaneItem(
+        title: const Text('Suppliers'),
+        icon: const Icon(FluentIcons.business_card),
+        body: SuppplierScreen()),
   ];
 
   int topIndex = 0;
@@ -45,7 +49,6 @@ class _MainPageState extends State<MainPage> {
         onChanged: (index) => setState(() => topIndex = index),
         displayMode: PaneDisplayMode.compact,
         items: items,
-
         footerItems: [
           PaneItem(
             icon: const Icon(Iconsax.setting_4),

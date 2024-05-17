@@ -24,9 +24,6 @@ class _ProductScreenState extends State<ProductScreen> {
   void initState() {
     _productSearchController.text = "";
 
-    // for (Product prod in products) {
-    //   prod.save();
-    // }
     // TODO: implement initState
     super.initState();
   }

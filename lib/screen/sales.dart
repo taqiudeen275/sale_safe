@@ -1,19 +1,19 @@
-import 'dart:io';
+// import 'dart:io';
 
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:get/get.dart';
-import 'package:path_provider/path_provider.dart';
+// import 'package:path_provider/path_provider.dart';
 import 'package:sale_safe/data/forms/invoiceForm.dart';
 import 'package:sale_safe/model/model.dart';
 import 'package:sale_safe/utils/components/invoice_widget.dart';
 import 'package:sale_safe/utils/components/modal.dart';
 import 'package:sale_safe/utils/components/orderPick.dart';
-import 'package:sale_safe/utils/components/printableInvoice.dart';
+// import 'package:sale_safe/utils/components/printableInvoice.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 import 'package:sale_safe/utils/utils.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
+// import 'package:pdf/pdf.dart';
+// import 'package:pdf/widgets.dart' as pw;
+// import 'package:printing/printing.dart';
 
 class SalesScreen extends StatefulWidget {
   SalesScreen({super.key});
@@ -64,6 +64,15 @@ class _SalesScreenState extends State<SalesScreen> {
                               salesController.fetchByDate(selectedDate!);
                             }),
                           ),
+                          const SizedBox(width: 10),
+                      FilledButton(
+                          child: Text("Today"),
+                          onPressed: () {
+                            setState(() {
+                              selectedDate = DateTime.now();
+                              salesController.fetchByDate(selectedDate!);
+                            });
+                          })
                         ],
                       ),
                       RecordSale(
@@ -340,7 +349,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                                 fontWeight: FontWeight.bold),
                                           ),
                                           Text(
-                                              "GH¢  ${sale.amount!.toStringAsFixed(2)}",
+                                              "GH¢ ${sale.amount!.toStringAsFixed(2)}",
                                               style: const TextStyle(
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.bold)),

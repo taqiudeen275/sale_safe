@@ -370,6 +370,18 @@ class PaymentController extends BaseSqfEntityController<Payment> {
 class ExpenseController extends BaseSqfEntityController<Expense> {
   RxBool isSelected = false.obs;
   RxList selectedID = [].obs;
+    RxList<Expense> expenseByDate = <Expense>[].obs;
+
+  Future<void> fetchByDate(DateTime date) async {
+    var res = await Expense().select().toList(preload: true);
+    List<Expense> filtered = [];
+    for (Expense expense in res) {
+      if (isSameDate(expense.date!, date)) {
+        filtered.add(expense);
+      }
+      expenseByDate.value = filtered;
+    }
+  }
 
   @override
   Future<void> fetchModels() async {

@@ -1,4 +1,6 @@
+import 'package:fluent_ui/fluent_ui.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:sale_safe/model/model.dart';
 import 'package:sale_safe/utils/utils.dart';
 import 'package:sqfentity_gen/sqfentity_gen.dart';
@@ -312,9 +314,10 @@ class InvoiceController extends BaseSqfEntityController<Invoice> {
   }
 
   Future<Invoice?> getById(int id) async {
-    return await Invoice().getById(id,preload: true);
+    return await Invoice().getById(id, preload: true);
   }
- Future<Invoice?> getBySaleId(int id) async {
+
+  Future<Invoice?> getBySaleId(int id) async {
     return await Invoice().select().salesId.equals(id).toSingle(preload: true);
   }
 
@@ -370,7 +373,7 @@ class PaymentController extends BaseSqfEntityController<Payment> {
 class ExpenseController extends BaseSqfEntityController<Expense> {
   RxBool isSelected = false.obs;
   RxList selectedID = [].obs;
-    RxList<Expense> expenseByDate = <Expense>[].obs;
+  RxList<Expense> expenseByDate = <Expense>[].obs;
 
   Future<void> fetchByDate(DateTime date) async {
     var res = await Expense().select().toList(preload: true);
@@ -537,5 +540,16 @@ class UserController extends BaseSqfEntityController<User> {
       await deleteById(model);
     }
     await fetchModels();
+  }
+}
+
+class UtilityController extends GetxController {
+ final box = GetStorage();
+  String get getAdminPass => box.read('adminpass') ?? "1234";
+  void setAdminPass(String val) => box.write('adminpass', val);
+
+  @override
+  void onInit() {
+    super.onInit();
   }
 }

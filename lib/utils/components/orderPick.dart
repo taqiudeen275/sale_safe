@@ -232,7 +232,7 @@ class _OrderPickState extends State<OrderPick> {
                                         fontSize: 24,
                                       )),
                                   Text(
-                                    "TOTAL: GH¢ ${orderController.selectedItems.fold(0.0, (sum, order) => sum + (order.amount! + sum)).toStringAsFixed(2)}",
+                                    "TOTAL: GH¢ ${orderController.selectedItems.isNotEmpty? orderController.selectedItems.map((order) => order.amount!).reduce((sum, amount) => sum + amount).toStringAsFixed(2): 0.toStringAsFixed(2)}",
                                     style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold),

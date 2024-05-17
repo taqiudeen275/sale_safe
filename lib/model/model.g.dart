@@ -12897,7 +12897,6 @@ class ProfitAndLoss extends TableBase {
   /// Saves the (ProfitAndLoss) object. If the id field is null, saves as a new record and returns new id, if id is not null then updates record
   /// ignoreBatch = true as a default. Set ignoreBatch to false if you run more than one save() operation those are between batchStart and batchCommit
   /// <returns>Returns id
-  @override
   Future<int?> _save({bool ignoreBatch = true}) async {
     if (id == null || id == 0) {
       id = await _mnProfitAndLoss.insert(this, ignoreBatch);
@@ -12911,7 +12910,6 @@ class ProfitAndLoss extends TableBase {
   /// Saves the (ProfitAndLoss) object. If the id field is null, saves as a new record and returns new id, if id is not null then updates record
   /// ignoreBatch = true as a default. Set ignoreBatch to false if you run more than one save() operation those are between batchStart and batchCommit
   /// <returns>Returns id
-  @override
   Future<int?> _saveOrThrow({bool ignoreBatch = true}) async {
     if (id == null || id == 0) {
       id = await _mnProfitAndLoss.insertOrThrow(this, ignoreBatch);

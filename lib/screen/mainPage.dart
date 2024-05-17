@@ -4,6 +4,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:sale_safe/screen/expense.dart';
 import 'package:sale_safe/screen/inventory.dart';
 import 'package:sale_safe/screen/sales.dart';
+import 'package:sale_safe/screen/setting.dart';
 import 'package:sale_safe/screen/suppliers.dart';
 
 class MainPage extends StatefulWidget {
@@ -53,25 +54,13 @@ class _MainPageState extends State<MainPage> {
           PaneItem(
             icon: const Icon(Iconsax.setting_4),
             title: const Text('Settings'),
-            body: Placeholder(),
+            body: SettingsScreen(),
           ),
           PaneItemAction(
-            icon: const Icon(FluentIcons.add),
-            title: const Text('Add New Item'),
+            icon: const Icon(FluentIcons.info),
+            title: const Text('About'),
             onTap: () {
-              // Your Logic to Add New `NavigationPaneItem`
-              items.add(
-                PaneItem(
-                  icon: const Icon(FluentIcons.new_folder),
-                  title: const Text('New Item'),
-                  body: const Center(
-                    child: Text(
-                      'This is a newly added Item',
-                    ),
-                  ),
-                ),
-              );
-              setState(() {});
+             
             },
           ),
         ],

@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:sale_safe/model/model.dart';
 
 class InvoiceWidget extends StatelessWidget {
   final String invoiceNumber;
   final String to;
   final DateTime invoiceDate;
-  final List<InvoiceItem> invoiceItems;
+  final List<Order> invoiceItems;
 
   const InvoiceWidget({
     Key? key,
@@ -177,7 +178,7 @@ class InvoiceWidget extends StatelessWidget {
                       TableCell(
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text(item.description),
+                          child: Text(item.plProduct!.description!),
                         ),
                       ),
                       TableCell(
@@ -189,13 +190,13 @@ class InvoiceWidget extends StatelessWidget {
                       TableCell(
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text(item.rate.toStringAsFixed(2)),
+                          child: Text(item.plProduct!.price!.toStringAsFixed(2)),
                         ),
                       ),
                       TableCell(
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text(item.total.toStringAsFixed(2)),
+                          child: Text(item.amount!.toStringAsFixed(2)),
                         ),
                       ),
                     ],
@@ -216,7 +217,7 @@ class InvoiceWidget extends StatelessWidget {
                 ),
               ),
               Text(
-                'GH¢ ${invoiceItems.fold<double>(0, (sum, item) => sum + item.total).toStringAsFixed(2)}',
+                'GH¢ ${invoiceItems.fold<double>(0, (sum, item) => sum + item.amount!).toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontSize: 18.0,
                   fontWeight: FontWeight.bold,

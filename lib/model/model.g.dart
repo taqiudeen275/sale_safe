@@ -236,12 +236,8 @@ class TableInvoice extends SqfEntityTableBase {
           relationType: RelationType.ONE_TO_MANY,
           fieldName: 'salesId',
           defaultValue: 0),
-      SqfEntityFieldRelationshipBase(
-          TablePaymentDetail.getInstance, DeleteRule.CASCADE,
-          relationType: RelationType.ONE_TO_MANY,
-          fieldName: 'paymentDetailsId',
-          defaultValue: 0),
-      SqfEntityFieldBase('description', DbType.text),
+      SqfEntityFieldBase('to', DbType.text),
+      SqfEntityFieldBase('invoice_number', DbType.text),
       SqfEntityFieldBase('amount', DbType.real),
       SqfEntityFieldBase('is_due', DbType.bool),
       SqfEntityFieldBase('is_paid', DbType.bool),
@@ -276,10 +272,9 @@ class TablePayment extends SqfEntityTableBase {
           relationType: RelationType.ONE_TO_MANY,
           fieldName: 'paymentMethodsId',
           defaultValue: 0),
-      SqfEntityFieldRelationshipBase(
-          TableInvoice.getInstance, DeleteRule.CASCADE,
+      SqfEntityFieldRelationshipBase(TableSale.getInstance, DeleteRule.CASCADE,
           relationType: RelationType.ONE_TO_MANY,
-          fieldName: 'invoice',
+          fieldName: 'sale',
           defaultValue: 0),
       SqfEntityFieldBase('amount', DbType.real),
       SqfEntityFieldBase('description', DbType.text),
@@ -483,7 +478,11 @@ class SalesSafeDbModel extends SqfEntityModelProvider {
         .bundledDatabasePath; //'assets/sample.db'; // This value is optional. When bundledDatabasePath is empty then EntityBase creats a new database when initializing the database
     databasePath = myDbModel.databasePath;
   }
- 
+  Map<String, dynamic> getControllers() {
+    final controllers = <String, dynamic>{};
+
+    return controllers;
+  }
 }
 // END DATABASE MODEL
 
@@ -5660,26 +5659,6 @@ class PaymentDetail extends TableBase {
   }
   // END RELATIONSHIPS (PaymentDetail)
 
-// COLLECTIONS & VIRTUALS (PaymentDetail)
-  /// to load children of items to this field, use preload parameter. Ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
-  /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plInvoices', 'plField2'..]) or so on..
-  List<Invoice>? plInvoices;
-
-  /// get Invoice(s) filtered by id=paymentDetailsId
-  InvoiceFilterBuilder? getInvoices(
-      {List<String>? columnsToSelect, bool? getIsDeleted}) {
-    if (id == null) {
-      return null;
-    }
-    return Invoice()
-        .select(columnsToSelect: columnsToSelect, getIsDeleted: getIsDeleted)
-        .paymentDetailsId
-        .equals(id)
-        .and;
-  }
-
-// END COLLECTIONS & VIRTUALS (PaymentDetail)
-
   static const bool _softDeleteActivated = true;
   PaymentDetailManager? __mnPaymentDetail;
 
@@ -5754,12 +5733,6 @@ class PaymentDetail extends TableBase {
     if (isDeleted != null) {
       map['isDeleted'] = forQuery ? (isDeleted! ? 1 : 0) : isDeleted;
     }
-
-// COLLECTIONS (PaymentDetail)
-    if (!forQuery) {
-      map['Invoices'] = await getInvoices()!.toMapList();
-    }
-// END COLLECTIONS (PaymentDetail)
 
     return map;
   }
@@ -5841,21 +5814,6 @@ class PaymentDetail extends TableBase {
           setDefaultValues: setDefaultValues);
       // final List<String> _loadedFields = List<String>.from(loadedFields);
 
-      // RELATIONSHIPS PRELOAD CHILD
-      if (preload) {
-        loadedFields = loadedFields ?? [];
-        if (/*!_loadedfields!.contains('paymentDetails.plInvoices') && */ (preloadFields ==
-                null ||
-            preloadFields.contains('plInvoices'))) {
-          /*_loadedfields!.add('paymentDetails.plInvoices'); */ obj.plInvoices =
-              obj.plInvoices ??
-                  await obj.getInvoices()!.toList(
-                      preload: preload,
-                      preloadFields: preloadFields,
-                      loadParents: false /*, loadedFields:_loadedFields*/);
-        }
-      } // END RELATIONSHIPS PRELOAD CHILD
-
       // RELATIONSHIPS PRELOAD
       if (preload || loadParents) {
         loadedFields = loadedFields ?? [];
@@ -5893,21 +5851,6 @@ class PaymentDetail extends TableBase {
     final data = await _mnPaymentDetail.getById([id]);
     if (data.length != 0) {
       obj = PaymentDetail.fromMap(data[0] as Map<String, dynamic>);
-
-      // RELATIONSHIPS PRELOAD CHILD
-      if (preload) {
-        loadedFields = loadedFields ?? [];
-        if (/*!_loadedfields!.contains('paymentDetails.plInvoices') && */ (preloadFields ==
-                null ||
-            preloadFields.contains('plInvoices'))) {
-          /*_loadedfields!.add('paymentDetails.plInvoices'); */ obj.plInvoices =
-              obj.plInvoices ??
-                  await obj.getInvoices()!.toList(
-                      preload: preload,
-                      preloadFields: preloadFields,
-                      loadParents: false /*, loadedFields:_loadedFields*/);
-        }
-      } // END RELATIONSHIPS PRELOAD CHILD
 
       // RELATIONSHIPS PRELOAD
       if (preload || loadParents) {
@@ -6044,18 +5987,6 @@ class PaymentDetail extends TableBase {
   @override
   Future<BoolResult> delete([bool hardDelete = false]) async {
     debugPrint('SQFENTITIY: delete PaymentDetail invoked (id=$id)');
-    var result = BoolResult(success: false);
-    {
-      result = await Invoice()
-          .select()
-          .paymentDetailsId
-          .equals(id)
-          .and
-          .delete(hardDelete);
-    }
-    if (!result.success) {
-      return result;
-    }
     if (!_softDeleteActivated || hardDelete || isDeleted!) {
       return _mnPaymentDetail
           .delete(QueryParams(whereString: 'id=?', whereArguments: [id]));
@@ -6072,21 +6003,6 @@ class PaymentDetail extends TableBase {
   @override
   Future<BoolResult> recover([bool recoverChilds = true]) async {
     debugPrint('SQFENTITIY: recover PaymentDetail invoked (id=$id)');
-    var result = BoolResult(success: false);
-    if (recoverChilds) {
-      result = await Invoice()
-          .select(getIsDeleted: true)
-          .isDeleted
-          .equals(true)
-          .and
-          .paymentDetailsId
-          .equals(id)
-          .and
-          .update({'isDeleted': 0});
-    }
-    if (!result.success && recoverChilds) {
-      return result;
-    }
     {
       return _mnPaymentDetail.updateBatch(
           QueryParams(whereString: 'id=?', whereArguments: [id]),
@@ -6354,17 +6270,6 @@ class PaymentDetailFilterBuilder extends ConjunctionBase {
   Future<BoolResult> delete([bool hardDelete = false]) async {
     buildParameters();
     var r = BoolResult(success: false);
-    // Delete sub records where in (Invoice) according to DeleteRule.CASCADE
-    final idListInvoiceBYpaymentDetailsId = toListPrimaryKeySQL(false);
-    final resInvoiceBYpaymentDetailsId = await Invoice()
-        .select()
-        .where(
-            'paymentDetailsId IN (${idListInvoiceBYpaymentDetailsId['sql']})',
-            parameterValue: idListInvoiceBYpaymentDetailsId['args'])
-        .delete(hardDelete);
-    if (!resInvoiceBYpaymentDetailsId.success) {
-      return resInvoiceBYpaymentDetailsId;
-    }
 
     if (_softDeleteActivated && !hardDelete) {
       r = await _mnPaymentDetail!.updateBatch(qparams, {'isDeleted': 1});
@@ -6379,17 +6284,6 @@ class PaymentDetailFilterBuilder extends ConjunctionBase {
   Future<BoolResult> recover() async {
     buildParameters(getIsDeleted: true);
     debugPrint('SQFENTITIY: recover PaymentDetail bulk invoked');
-    // Recover sub records where in (Invoice) according to DeleteRule.CASCADE
-    final idListInvoiceBYpaymentDetailsId = toListPrimaryKeySQL(false);
-    final resInvoiceBYpaymentDetailsId = await Invoice()
-        .select()
-        .where(
-            'paymentDetailsId IN (${idListInvoiceBYpaymentDetailsId['sql']})',
-            parameterValue: idListInvoiceBYpaymentDetailsId['args'])
-        .update({'isDeleted': 0});
-    if (!resInvoiceBYpaymentDetailsId.success) {
-      return resInvoiceBYpaymentDetailsId;
-    }
     return _mnPaymentDetail!.updateBatch(qparams, {'isDeleted': 0});
   }
 
@@ -6426,21 +6320,6 @@ class PaymentDetailFilterBuilder extends ConjunctionBase {
     PaymentDetail? obj;
     if (data.isNotEmpty) {
       obj = PaymentDetail.fromMap(data[0] as Map<String, dynamic>);
-
-      // RELATIONSHIPS PRELOAD CHILD
-      if (preload) {
-        loadedFields = loadedFields ?? [];
-        if (/*!_loadedfields!.contains('paymentDetails.plInvoices') && */ (preloadFields ==
-                null ||
-            preloadFields.contains('plInvoices'))) {
-          /*_loadedfields!.add('paymentDetails.plInvoices'); */ obj.plInvoices =
-              obj.plInvoices ??
-                  await obj.getInvoices()!.toList(
-                      preload: preload,
-                      preloadFields: preloadFields,
-                      loadParents: false /*, loadedFields:_loadedFields*/);
-        }
-      } // END RELATIONSHIPS PRELOAD CHILD
 
       // RELATIONSHIPS PRELOAD
       if (preload || loadParents) {
@@ -7655,8 +7534,8 @@ class Invoice extends TableBase {
       {this.id,
       this.number,
       this.salesId,
-      this.paymentDetailsId,
-      this.description,
+      this.to,
+      this.invoice_number,
       this.amount,
       this.is_due,
       this.is_paid,
@@ -7669,8 +7548,8 @@ class Invoice extends TableBase {
   Invoice.withFields(
       this.number,
       this.salesId,
-      this.paymentDetailsId,
-      this.description,
+      this.to,
+      this.invoice_number,
       this.amount,
       this.is_due,
       this.is_paid,
@@ -7683,8 +7562,8 @@ class Invoice extends TableBase {
       this.id,
       this.number,
       this.salesId,
-      this.paymentDetailsId,
-      this.description,
+      this.to,
+      this.invoice_number,
       this.amount,
       this.is_due,
       this.is_paid,
@@ -7704,10 +7583,11 @@ class Invoice extends TableBase {
     }
     salesId = int.tryParse(o['salesId'].toString());
 
-    paymentDetailsId = int.tryParse(o['paymentDetailsId'].toString());
-
-    if (o['description'] != null) {
-      description = o['description'].toString();
+    if (o['to'] != null) {
+      to = o['to'].toString();
+    }
+    if (o['invoice_number'] != null) {
+      invoice_number = o['invoice_number'].toString();
     }
     if (o['amount'] != null) {
       amount = double.tryParse(o['amount'].toString());
@@ -7740,17 +7620,14 @@ class Invoice extends TableBase {
     plSale = o['sale'] != null
         ? Sale.fromMap(o['sale'] as Map<String, dynamic>)
         : null;
-    plPaymentDetail = o['paymentDetail'] != null
-        ? PaymentDetail.fromMap(o['paymentDetail'] as Map<String, dynamic>)
-        : null;
     // END RELATIONSHIPS FromMAP
   }
   // FIELDS (Invoice)
   int? id;
   int? number;
   int? salesId;
-  int? paymentDetailsId;
-  String? description;
+  String? to;
+  String? invoice_number;
   double? amount;
   bool? is_due;
   bool? is_paid;
@@ -7772,39 +7649,7 @@ class Invoice extends TableBase {
         .getById(salesId, loadParents: loadParents, loadedFields: loadedFields);
     return _obj;
   }
-
-  /// to load parent of items to this field, use preload parameter ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
-  /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plPaymentDetail', 'plField2'..]) or so on..
-  PaymentDetail? plPaymentDetail;
-
-  /// get PaymentDetail By PaymentDetailsId
-  Future<PaymentDetail?> getPaymentDetail(
-      {bool loadParents = false, List<String>? loadedFields}) async {
-    final _obj = await PaymentDetail().getById(paymentDetailsId,
-        loadParents: loadParents, loadedFields: loadedFields);
-    return _obj;
-  }
   // END RELATIONSHIPS (Invoice)
-
-// COLLECTIONS & VIRTUALS (Invoice)
-  /// to load children of items to this field, use preload parameter. Ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
-  /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plPayments', 'plField2'..]) or so on..
-  List<Payment>? plPayments;
-
-  /// get Payment(s) filtered by id=invoice
-  PaymentFilterBuilder? getPayments(
-      {List<String>? columnsToSelect, bool? getIsDeleted}) {
-    if (id == null) {
-      return null;
-    }
-    return Payment()
-        .select(columnsToSelect: columnsToSelect, getIsDeleted: getIsDeleted)
-        .invoice
-        .equals(id)
-        .and;
-  }
-
-// END COLLECTIONS & VIRTUALS (Invoice)
 
   static const bool _softDeleteActivated = true;
   InvoiceManager? __mnInvoice;
@@ -7831,17 +7676,11 @@ class Invoice extends TableBase {
     } else if (salesId != null || !forView) {
       map['salesId'] = null;
     }
-    if (paymentDetailsId != null) {
-      map['paymentDetailsId'] = forView
-          ? plPaymentDetail == null
-              ? paymentDetailsId
-              : plPaymentDetail!.details
-          : paymentDetailsId;
-    } else if (paymentDetailsId != null || !forView) {
-      map['paymentDetailsId'] = null;
+    if (to != null || !forView) {
+      map['to'] = to;
     }
-    if (description != null || !forView) {
-      map['description'] = description;
+    if (invoice_number != null || !forView) {
+      map['invoice_number'] = invoice_number;
     }
     if (amount != null || !forView) {
       map['amount'] = amount;
@@ -7901,17 +7740,11 @@ class Invoice extends TableBase {
     } else if (salesId != null || !forView) {
       map['salesId'] = null;
     }
-    if (paymentDetailsId != null) {
-      map['paymentDetailsId'] = forView
-          ? plPaymentDetail == null
-              ? paymentDetailsId
-              : plPaymentDetail!.details
-          : paymentDetailsId;
-    } else if (paymentDetailsId != null || !forView) {
-      map['paymentDetailsId'] = null;
+    if (to != null || !forView) {
+      map['to'] = to;
     }
-    if (description != null || !forView) {
-      map['description'] = description;
+    if (invoice_number != null || !forView) {
+      map['invoice_number'] = invoice_number;
     }
     if (amount != null || !forView) {
       map['amount'] = amount;
@@ -7949,12 +7782,6 @@ class Invoice extends TableBase {
       map['isDeleted'] = forQuery ? (isDeleted! ? 1 : 0) : isDeleted;
     }
 
-// COLLECTIONS (Invoice)
-    if (!forQuery) {
-      map['Payments'] = await getPayments()!.toMapList();
-    }
-// END COLLECTIONS (Invoice)
-
     return map;
   }
 
@@ -7975,8 +7802,8 @@ class Invoice extends TableBase {
     return [
       number,
       salesId,
-      paymentDetailsId,
-      description,
+      to,
+      invoice_number,
       amount,
       is_due,
       is_paid,
@@ -7992,8 +7819,8 @@ class Invoice extends TableBase {
       id,
       number,
       salesId,
-      paymentDetailsId,
-      description,
+      to,
+      invoice_number,
       amount,
       is_due,
       is_paid,
@@ -8046,21 +7873,6 @@ class Invoice extends TableBase {
           setDefaultValues: setDefaultValues);
       // final List<String> _loadedFields = List<String>.from(loadedFields);
 
-      // RELATIONSHIPS PRELOAD CHILD
-      if (preload) {
-        loadedFields = loadedFields ?? [];
-        if (/*!_loadedfields!.contains('invoice.plPayments') && */ (preloadFields ==
-                null ||
-            preloadFields.contains('plPayments'))) {
-          /*_loadedfields!.add('invoice.plPayments'); */ obj.plPayments =
-              obj.plPayments ??
-                  await obj.getPayments()!.toList(
-                      preload: preload,
-                      preloadFields: preloadFields,
-                      loadParents: false /*, loadedFields:_loadedFields*/);
-        }
-      } // END RELATIONSHIPS PRELOAD CHILD
-
       // RELATIONSHIPS PRELOAD
       if (preload || loadParents) {
         loadedFields = loadedFields ?? [];
@@ -8069,12 +7881,6 @@ class Invoice extends TableBase {
             preloadFields.contains('plSale'))) {
           obj.plSale =
               obj.plSale ?? await obj.getSale(loadParents: loadParents);
-        }
-        if ((preloadFields == null ||
-            loadParents ||
-            preloadFields.contains('plPaymentDetail'))) {
-          obj.plPaymentDetail = obj.plPaymentDetail ??
-              await obj.getPaymentDetail(loadParents: loadParents);
         }
       } // END RELATIONSHIPS PRELOAD
 
@@ -8105,21 +7911,6 @@ class Invoice extends TableBase {
     if (data.length != 0) {
       obj = Invoice.fromMap(data[0] as Map<String, dynamic>);
 
-      // RELATIONSHIPS PRELOAD CHILD
-      if (preload) {
-        loadedFields = loadedFields ?? [];
-        if (/*!_loadedfields!.contains('invoice.plPayments') && */ (preloadFields ==
-                null ||
-            preloadFields.contains('plPayments'))) {
-          /*_loadedfields!.add('invoice.plPayments'); */ obj.plPayments =
-              obj.plPayments ??
-                  await obj.getPayments()!.toList(
-                      preload: preload,
-                      preloadFields: preloadFields,
-                      loadParents: false /*, loadedFields:_loadedFields*/);
-        }
-      } // END RELATIONSHIPS PRELOAD CHILD
-
       // RELATIONSHIPS PRELOAD
       if (preload || loadParents) {
         loadedFields = loadedFields ?? [];
@@ -8128,12 +7919,6 @@ class Invoice extends TableBase {
             preloadFields.contains('plSale'))) {
           obj.plSale =
               obj.plSale ?? await obj.getSale(loadParents: loadParents);
-        }
-        if ((preloadFields == null ||
-            loadParents ||
-            preloadFields.contains('plPaymentDetail'))) {
-          obj.plPaymentDetail = obj.plPaymentDetail ??
-              await obj.getPaymentDetail(loadParents: loadParents);
         }
       } // END RELATIONSHIPS PRELOAD
     } else {
@@ -8217,13 +8002,13 @@ class Invoice extends TableBase {
   Future<int?> upsert({bool ignoreBatch = true}) async {
     try {
       final result = await _mnInvoice.rawInsert(
-          'INSERT OR REPLACE INTO invoice (id, number, salesId, paymentDetailsId, description, amount, is_due, is_paid, due_date, date,isDeleted)  VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+          'INSERT OR REPLACE INTO invoice (id, number, salesId, to, invoice_number, amount, is_due, is_paid, due_date, date,isDeleted)  VALUES (?,?,?,?,?,?,?,?,?,?,?)',
           [
             id,
             number,
             salesId,
-            paymentDetailsId,
-            description,
+            to,
+            invoice_number,
             amount,
             is_due,
             is_paid,
@@ -8256,7 +8041,7 @@ class Invoice extends TableBase {
   Future<BoolCommitResult> upsertAll(List<Invoice> invoices,
       {bool? exclusive, bool? noResult, bool? continueOnError}) async {
     final results = await _mnInvoice.rawInsertAll(
-        'INSERT OR REPLACE INTO invoice (id, number, salesId, paymentDetailsId, description, amount, is_due, is_paid, due_date, date,isDeleted)  VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+        'INSERT OR REPLACE INTO invoice (id, number, salesId, to, invoice_number, amount, is_due, is_paid, due_date, date,isDeleted)  VALUES (?,?,?,?,?,?,?,?,?,?,?)',
         invoices,
         exclusive: exclusive,
         noResult: noResult,
@@ -8270,14 +8055,6 @@ class Invoice extends TableBase {
   @override
   Future<BoolResult> delete([bool hardDelete = false]) async {
     debugPrint('SQFENTITIY: delete Invoice invoked (id=$id)');
-    var result = BoolResult(success: false);
-    {
-      result =
-          await Payment().select().invoice.equals(id).and.delete(hardDelete);
-    }
-    if (!result.success) {
-      return result;
-    }
     if (!_softDeleteActivated || hardDelete || isDeleted!) {
       return _mnInvoice
           .delete(QueryParams(whereString: 'id=?', whereArguments: [id]));
@@ -8294,21 +8071,6 @@ class Invoice extends TableBase {
   @override
   Future<BoolResult> recover([bool recoverChilds = true]) async {
     debugPrint('SQFENTITIY: recover Invoice invoked (id=$id)');
-    var result = BoolResult(success: false);
-    if (recoverChilds) {
-      result = await Payment()
-          .select(getIsDeleted: true)
-          .isDeleted
-          .equals(true)
-          .and
-          .invoice
-          .equals(id)
-          .and
-          .update({'isDeleted': 0});
-    }
-    if (!result.success && recoverChilds) {
-      return result;
-    }
     {
       return _mnInvoice.updateBatch(
           QueryParams(whereString: 'id=?', whereArguments: [id]),
@@ -8333,7 +8095,6 @@ class Invoice extends TableBase {
 
   void _setDefaultValues() {
     salesId = salesId ?? 0;
-    paymentDetailsId = paymentDetailsId ?? 0;
     isDeleted = isDeleted ?? false;
   }
 
@@ -8556,15 +8317,15 @@ class InvoiceFilterBuilder extends ConjunctionBase {
     return _salesId = _setField(_salesId, 'salesId', DbType.integer);
   }
 
-  InvoiceField? _paymentDetailsId;
-  InvoiceField get paymentDetailsId {
-    return _paymentDetailsId =
-        _setField(_paymentDetailsId, 'paymentDetailsId', DbType.integer);
+  InvoiceField? _to;
+  InvoiceField get to {
+    return _to = _setField(_to, 'to', DbType.text);
   }
 
-  InvoiceField? _description;
-  InvoiceField get description {
-    return _description = _setField(_description, 'description', DbType.text);
+  InvoiceField? _invoice_number;
+  InvoiceField get invoice_number {
+    return _invoice_number =
+        _setField(_invoice_number, 'invoice_number', DbType.text);
   }
 
   InvoiceField? _amount;
@@ -8604,16 +8365,6 @@ class InvoiceFilterBuilder extends ConjunctionBase {
   Future<BoolResult> delete([bool hardDelete = false]) async {
     buildParameters();
     var r = BoolResult(success: false);
-    // Delete sub records where in (Payment) according to DeleteRule.CASCADE
-    final idListPaymentBYinvoice = toListPrimaryKeySQL(false);
-    final resPaymentBYinvoice = await Payment()
-        .select()
-        .where('invoice IN (${idListPaymentBYinvoice['sql']})',
-            parameterValue: idListPaymentBYinvoice['args'])
-        .delete(hardDelete);
-    if (!resPaymentBYinvoice.success) {
-      return resPaymentBYinvoice;
-    }
 
     if (_softDeleteActivated && !hardDelete) {
       r = await _mnInvoice!.updateBatch(qparams, {'isDeleted': 1});
@@ -8628,16 +8379,6 @@ class InvoiceFilterBuilder extends ConjunctionBase {
   Future<BoolResult> recover() async {
     buildParameters(getIsDeleted: true);
     debugPrint('SQFENTITIY: recover Invoice bulk invoked');
-    // Recover sub records where in (Payment) according to DeleteRule.CASCADE
-    final idListPaymentBYinvoice = toListPrimaryKeySQL(false);
-    final resPaymentBYinvoice = await Payment()
-        .select()
-        .where('invoice IN (${idListPaymentBYinvoice['sql']})',
-            parameterValue: idListPaymentBYinvoice['args'])
-        .update({'isDeleted': 0});
-    if (!resPaymentBYinvoice.success) {
-      return resPaymentBYinvoice;
-    }
     return _mnInvoice!.updateBatch(qparams, {'isDeleted': 0});
   }
 
@@ -8675,21 +8416,6 @@ class InvoiceFilterBuilder extends ConjunctionBase {
     if (data.isNotEmpty) {
       obj = Invoice.fromMap(data[0] as Map<String, dynamic>);
 
-      // RELATIONSHIPS PRELOAD CHILD
-      if (preload) {
-        loadedFields = loadedFields ?? [];
-        if (/*!_loadedfields!.contains('invoice.plPayments') && */ (preloadFields ==
-                null ||
-            preloadFields.contains('plPayments'))) {
-          /*_loadedfields!.add('invoice.plPayments'); */ obj.plPayments =
-              obj.plPayments ??
-                  await obj.getPayments()!.toList(
-                      preload: preload,
-                      preloadFields: preloadFields,
-                      loadParents: false /*, loadedFields:_loadedFields*/);
-        }
-      } // END RELATIONSHIPS PRELOAD CHILD
-
       // RELATIONSHIPS PRELOAD
       if (preload || loadParents) {
         loadedFields = loadedFields ?? [];
@@ -8698,12 +8424,6 @@ class InvoiceFilterBuilder extends ConjunctionBase {
             preloadFields.contains('plSale'))) {
           obj.plSale =
               obj.plSale ?? await obj.getSale(loadParents: loadParents);
-        }
-        if ((preloadFields == null ||
-            loadParents ||
-            preloadFields.contains('plPaymentDetail'))) {
-          obj.plPaymentDetail = obj.plPaymentDetail ??
-              await obj.getPaymentDetail(loadParents: loadParents);
         }
       } // END RELATIONSHIPS PRELOAD
     } else {
@@ -8893,17 +8613,15 @@ class InvoiceFields {
         _fSalesId ?? SqlSyntax.setField(_fSalesId, 'salesId', DbType.integer);
   }
 
-  static TableField? _fPaymentDetailsId;
-  static TableField get paymentDetailsId {
-    return _fPaymentDetailsId = _fPaymentDetailsId ??
-        SqlSyntax.setField(
-            _fPaymentDetailsId, 'paymentDetailsId', DbType.integer);
+  static TableField? _fTo;
+  static TableField get to {
+    return _fTo = _fTo ?? SqlSyntax.setField(_fTo, 'to', DbType.text);
   }
 
-  static TableField? _fDescription;
-  static TableField get description {
-    return _fDescription = _fDescription ??
-        SqlSyntax.setField(_fDescription, 'description', DbType.text);
+  static TableField? _fInvoice_number;
+  static TableField get invoice_number {
+    return _fInvoice_number = _fInvoice_number ??
+        SqlSyntax.setField(_fInvoice_number, 'invoice_number', DbType.text);
   }
 
   static TableField? _fAmount;
@@ -8963,7 +8681,7 @@ class Payment extends TableBase {
       {this.id,
       this.number,
       this.paymentMethodsId,
-      this.invoice,
+      this.sale,
       this.amount,
       this.description,
       this.date,
@@ -8971,11 +8689,11 @@ class Payment extends TableBase {
     _setDefaultValues();
     softDeleteActivated = true;
   }
-  Payment.withFields(this.number, this.paymentMethodsId, this.invoice,
-      this.amount, this.description, this.date, this.isDeleted) {
+  Payment.withFields(this.number, this.paymentMethodsId, this.sale, this.amount,
+      this.description, this.date, this.isDeleted) {
     _setDefaultValues();
   }
-  Payment.withId(this.id, this.number, this.paymentMethodsId, this.invoice,
+  Payment.withId(this.id, this.number, this.paymentMethodsId, this.sale,
       this.amount, this.description, this.date, this.isDeleted) {
     _setDefaultValues();
   }
@@ -8990,7 +8708,7 @@ class Payment extends TableBase {
     }
     paymentMethodsId = int.tryParse(o['paymentMethodsId'].toString());
 
-    invoice = int.tryParse(o['invoice'].toString());
+    sale = int.tryParse(o['sale'].toString());
 
     if (o['amount'] != null) {
       amount = double.tryParse(o['amount'].toString());
@@ -9012,8 +8730,8 @@ class Payment extends TableBase {
     plPaymentMethod = o['paymentMethod'] != null
         ? PaymentMethod.fromMap(o['paymentMethod'] as Map<String, dynamic>)
         : null;
-    plInvoice = o['plInvoice'] != null
-        ? Invoice.fromMap(o['plInvoice'] as Map<String, dynamic>)
+    plSale = o['plSale'] != null
+        ? Sale.fromMap(o['plSale'] as Map<String, dynamic>)
         : null;
     // END RELATIONSHIPS FromMAP
   }
@@ -9021,7 +8739,7 @@ class Payment extends TableBase {
   int? id;
   int? number;
   int? paymentMethodsId;
-  int? invoice;
+  int? sale;
   double? amount;
   String? description;
   DateTime? date;
@@ -9043,14 +8761,14 @@ class Payment extends TableBase {
   }
 
   /// to load parent of items to this field, use preload parameter ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
-  /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plInvoice', 'plField2'..]) or so on..
-  Invoice? plInvoice;
+  /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plSale', 'plField2'..]) or so on..
+  Sale? plSale;
 
-  /// get Invoice By Invoice
-  Future<Invoice?> getInvoice(
+  /// get Sale By Sale
+  Future<Sale?> getSale(
       {bool loadParents = false, List<String>? loadedFields}) async {
-    final _obj = await Invoice()
-        .getById(invoice, loadParents: loadParents, loadedFields: loadedFields);
+    final _obj = await Sale()
+        .getById(sale, loadParents: loadParents, loadedFields: loadedFields);
     return _obj;
   }
   // END RELATIONSHIPS (Payment)
@@ -9080,14 +8798,14 @@ class Payment extends TableBase {
     } else if (paymentMethodsId != null || !forView) {
       map['paymentMethodsId'] = null;
     }
-    if (invoice != null) {
-      map['invoice'] = forView
-          ? plInvoice == null
-              ? invoice
-              : plInvoice!.description
-          : invoice;
-    } else if (invoice != null || !forView) {
-      map['invoice'] = null;
+    if (sale != null) {
+      map['sale'] = forView
+          ? plSale == null
+              ? sale
+              : plSale!.id
+          : sale;
+    } else if (sale != null || !forView) {
+      map['sale'] = null;
     }
     if (amount != null || !forView) {
       map['amount'] = amount;
@@ -9130,14 +8848,14 @@ class Payment extends TableBase {
     } else if (paymentMethodsId != null || !forView) {
       map['paymentMethodsId'] = null;
     }
-    if (invoice != null) {
-      map['invoice'] = forView
-          ? plInvoice == null
-              ? invoice
-              : plInvoice!.description
-          : invoice;
-    } else if (invoice != null || !forView) {
-      map['invoice'] = null;
+    if (sale != null) {
+      map['sale'] = forView
+          ? plSale == null
+              ? sale
+              : plSale!.id
+          : sale;
+    } else if (sale != null || !forView) {
+      map['sale'] = null;
     }
     if (amount != null || !forView) {
       map['amount'] = amount;
@@ -9178,7 +8896,7 @@ class Payment extends TableBase {
     return [
       number,
       paymentMethodsId,
-      invoice,
+      sale,
       amount,
       description,
       date != null ? date!.millisecondsSinceEpoch : null,
@@ -9192,7 +8910,7 @@ class Payment extends TableBase {
       id,
       number,
       paymentMethodsId,
-      invoice,
+      sale,
       amount,
       description,
       date != null ? date!.millisecondsSinceEpoch : null,
@@ -9254,9 +8972,9 @@ class Payment extends TableBase {
         }
         if ((preloadFields == null ||
             loadParents ||
-            preloadFields.contains('plInvoice'))) {
-          obj.plInvoice =
-              obj.plInvoice ?? await obj.getInvoice(loadParents: loadParents);
+            preloadFields.contains('plSale'))) {
+          obj.plSale =
+              obj.plSale ?? await obj.getSale(loadParents: loadParents);
         }
       } // END RELATIONSHIPS PRELOAD
 
@@ -9298,9 +9016,9 @@ class Payment extends TableBase {
         }
         if ((preloadFields == null ||
             loadParents ||
-            preloadFields.contains('plInvoice'))) {
-          obj.plInvoice =
-              obj.plInvoice ?? await obj.getInvoice(loadParents: loadParents);
+            preloadFields.contains('plSale'))) {
+          obj.plSale =
+              obj.plSale ?? await obj.getSale(loadParents: loadParents);
         }
       } // END RELATIONSHIPS PRELOAD
     } else {
@@ -9384,12 +9102,12 @@ class Payment extends TableBase {
   Future<int?> upsert({bool ignoreBatch = true}) async {
     try {
       final result = await _mnPayment.rawInsert(
-          'INSERT OR REPLACE INTO payment (id, number, paymentMethodsId, invoice, amount, description, date,isDeleted)  VALUES (?,?,?,?,?,?,?,?)',
+          'INSERT OR REPLACE INTO payment (id, number, paymentMethodsId, sale, amount, description, date,isDeleted)  VALUES (?,?,?,?,?,?,?,?)',
           [
             id,
             number,
             paymentMethodsId,
-            invoice,
+            sale,
             amount,
             description,
             date != null ? date!.millisecondsSinceEpoch : null,
@@ -9420,7 +9138,7 @@ class Payment extends TableBase {
   Future<BoolCommitResult> upsertAll(List<Payment> payments,
       {bool? exclusive, bool? noResult, bool? continueOnError}) async {
     final results = await _mnPayment.rawInsertAll(
-        'INSERT OR REPLACE INTO payment (id, number, paymentMethodsId, invoice, amount, description, date,isDeleted)  VALUES (?,?,?,?,?,?,?,?)',
+        'INSERT OR REPLACE INTO payment (id, number, paymentMethodsId, sale, amount, description, date,isDeleted)  VALUES (?,?,?,?,?,?,?,?)',
         payments,
         exclusive: exclusive,
         noResult: noResult,
@@ -9474,7 +9192,7 @@ class Payment extends TableBase {
 
   void _setDefaultValues() {
     paymentMethodsId = paymentMethodsId ?? 0;
-    invoice = invoice ?? 0;
+    sale = sale ?? 0;
     isDeleted = isDeleted ?? false;
   }
 
@@ -9698,9 +9416,9 @@ class PaymentFilterBuilder extends ConjunctionBase {
         _setField(_paymentMethodsId, 'paymentMethodsId', DbType.integer);
   }
 
-  PaymentField? _invoice;
-  PaymentField get invoice {
-    return _invoice = _setField(_invoice, 'invoice', DbType.integer);
+  PaymentField? _sale;
+  PaymentField get sale {
+    return _sale = _setField(_sale, 'sale', DbType.integer);
   }
 
   PaymentField? _amount;
@@ -9792,9 +9510,9 @@ class PaymentFilterBuilder extends ConjunctionBase {
         }
         if ((preloadFields == null ||
             loadParents ||
-            preloadFields.contains('plInvoice'))) {
-          obj.plInvoice =
-              obj.plInvoice ?? await obj.getInvoice(loadParents: loadParents);
+            preloadFields.contains('plSale'))) {
+          obj.plSale =
+              obj.plSale ?? await obj.getSale(loadParents: loadParents);
         }
       } // END RELATIONSHIPS PRELOAD
     } else {
@@ -9985,10 +9703,10 @@ class PaymentFields {
             _fPaymentMethodsId, 'paymentMethodsId', DbType.integer);
   }
 
-  static TableField? _fInvoice;
-  static TableField get invoice {
-    return _fInvoice =
-        _fInvoice ?? SqlSyntax.setField(_fInvoice, 'invoice', DbType.integer);
+  static TableField? _fSale;
+  static TableField get sale {
+    return _fSale =
+        _fSale ?? SqlSyntax.setField(_fSale, 'sale', DbType.integer);
   }
 
   static TableField? _fAmount;
@@ -10109,6 +9827,23 @@ class Sale extends TableBase {
         .and;
   }
 
+  /// to load children of items to this field, use preload parameter. Ex: toList(preload:true) or toSingle(preload:true) or getById(preload:true)
+  /// You can also specify this object into certain preload fields!. Ex: toList(preload:true, preloadFields:['plPayments', 'plField2'..]) or so on..
+  List<Payment>? plPayments;
+
+  /// get Payment(s) filtered by id=sale
+  PaymentFilterBuilder? getPayments(
+      {List<String>? columnsToSelect, bool? getIsDeleted}) {
+    if (id == null) {
+      return null;
+    }
+    return Payment()
+        .select(columnsToSelect: columnsToSelect, getIsDeleted: getIsDeleted)
+        .sale
+        .equals(id)
+        .and;
+  }
+
 // END COLLECTIONS & VIRTUALS (Sale)
 
   static const bool _softDeleteActivated = true;
@@ -10182,6 +9917,9 @@ class Sale extends TableBase {
     }
     if (!forQuery) {
       map['Invoices'] = await getInvoices()!.toMapList();
+    }
+    if (!forQuery) {
+      map['Payments'] = await getPayments()!.toMapList();
     }
 // END COLLECTIONS (Sale)
 
@@ -10287,6 +10025,16 @@ class Sale extends TableBase {
                       preloadFields: preloadFields,
                       loadParents: false /*, loadedFields:_loadedFields*/);
         }
+        if (/*!_loadedfields!.contains('sales.plPayments') && */ (preloadFields ==
+                null ||
+            preloadFields.contains('plPayments'))) {
+          /*_loadedfields!.add('sales.plPayments'); */ obj.plPayments =
+              obj.plPayments ??
+                  await obj.getPayments()!.toList(
+                      preload: preload,
+                      preloadFields: preloadFields,
+                      loadParents: false /*, loadedFields:_loadedFields*/);
+        }
       } // END RELATIONSHIPS PRELOAD CHILD
 
       objList.add(obj);
@@ -10335,6 +10083,16 @@ class Sale extends TableBase {
           /*_loadedfields!.add('sales.plInvoices'); */ obj.plInvoices =
               obj.plInvoices ??
                   await obj.getInvoices()!.toList(
+                      preload: preload,
+                      preloadFields: preloadFields,
+                      loadParents: false /*, loadedFields:_loadedFields*/);
+        }
+        if (/*!_loadedfields!.contains('sales.plPayments') && */ (preloadFields ==
+                null ||
+            preloadFields.contains('plPayments'))) {
+          /*_loadedfields!.add('sales.plPayments'); */ obj.plPayments =
+              obj.plPayments ??
+                  await obj.getPayments()!.toList(
                       preload: preload,
                       preloadFields: preloadFields,
                       loadParents: false /*, loadedFields:_loadedFields*/);
@@ -10477,6 +10235,12 @@ class Sale extends TableBase {
     if (!result.success) {
       return result;
     }
+    {
+      result = await Payment().select().sale.equals(id).and.delete(hardDelete);
+    }
+    if (!result.success) {
+      return result;
+    }
     if (!_softDeleteActivated || hardDelete || isDeleted!) {
       return _mnSale
           .delete(QueryParams(whereString: 'id=?', whereArguments: [id]));
@@ -10515,6 +10279,20 @@ class Sale extends TableBase {
           .equals(true)
           .and
           .salesId
+          .equals(id)
+          .and
+          .update({'isDeleted': 0});
+    }
+    if (!result.success && recoverChilds) {
+      return result;
+    }
+    if (recoverChilds) {
+      result = await Payment()
+          .select(getIsDeleted: true)
+          .isDeleted
+          .equals(true)
+          .and
+          .sale
           .equals(id)
           .and
           .update({'isDeleted': 0});
@@ -10803,6 +10581,16 @@ class SaleFilterBuilder extends ConjunctionBase {
     if (!resInvoiceBYsalesId.success) {
       return resInvoiceBYsalesId;
     }
+// Delete sub records where in (Payment) according to DeleteRule.CASCADE
+    final idListPaymentBYsale = toListPrimaryKeySQL(false);
+    final resPaymentBYsale = await Payment()
+        .select()
+        .where('sale IN (${idListPaymentBYsale['sql']})',
+            parameterValue: idListPaymentBYsale['args'])
+        .delete(hardDelete);
+    if (!resPaymentBYsale.success) {
+      return resPaymentBYsale;
+    }
 
     if (_softDeleteActivated && !hardDelete) {
       r = await _mnSale!.updateBatch(qparams, {'isDeleted': 1});
@@ -10836,6 +10624,16 @@ class SaleFilterBuilder extends ConjunctionBase {
         .update({'isDeleted': 0});
     if (!resInvoiceBYsalesId.success) {
       return resInvoiceBYsalesId;
+    }
+// Recover sub records where in (Payment) according to DeleteRule.CASCADE
+    final idListPaymentBYsale = toListPrimaryKeySQL(false);
+    final resPaymentBYsale = await Payment()
+        .select()
+        .where('sale IN (${idListPaymentBYsale['sql']})',
+            parameterValue: idListPaymentBYsale['args'])
+        .update({'isDeleted': 0});
+    if (!resPaymentBYsale.success) {
+      return resPaymentBYsale;
     }
     return _mnSale!.updateBatch(qparams, {'isDeleted': 0});
   }
@@ -10893,6 +10691,16 @@ class SaleFilterBuilder extends ConjunctionBase {
           /*_loadedfields!.add('sales.plInvoices'); */ obj.plInvoices =
               obj.plInvoices ??
                   await obj.getInvoices()!.toList(
+                      preload: preload,
+                      preloadFields: preloadFields,
+                      loadParents: false /*, loadedFields:_loadedFields*/);
+        }
+        if (/*!_loadedfields!.contains('sales.plPayments') && */ (preloadFields ==
+                null ||
+            preloadFields.contains('plPayments'))) {
+          /*_loadedfields!.add('sales.plPayments'); */ obj.plPayments =
+              obj.plPayments ??
+                  await obj.getPayments()!.toList(
                       preload: preload,
                       preloadFields: preloadFields,
                       loadParents: false /*, loadedFields:_loadedFields*/);
@@ -13242,6 +13050,7 @@ class ProfitAndLoss extends TableBase {
   /// Saves the (ProfitAndLoss) object. If the id field is null, saves as a new record and returns new id, if id is not null then updates record
   /// ignoreBatch = true as a default. Set ignoreBatch to false if you run more than one save() operation those are between batchStart and batchCommit
   /// <returns>Returns id
+  @override
   Future<int?> _save({bool ignoreBatch = true}) async {
     if (id == null || id == 0) {
       id = await _mnProfitAndLoss.insert(this, ignoreBatch);
@@ -13255,6 +13064,7 @@ class ProfitAndLoss extends TableBase {
   /// Saves the (ProfitAndLoss) object. If the id field is null, saves as a new record and returns new id, if id is not null then updates record
   /// ignoreBatch = true as a default. Set ignoreBatch to false if you run more than one save() operation those are between batchStart and batchCommit
   /// <returns>Returns id
+  @override
   Future<int?> _saveOrThrow({bool ignoreBatch = true}) async {
     if (id == null || id == 0) {
       id = await _mnProfitAndLoss.insertOrThrow(this, ignoreBatch);

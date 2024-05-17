@@ -4,27 +4,26 @@ import 'package:get/get.dart';
 import 'package:sale_safe/model/model.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 
-class CategoryAdd extends StatefulWidget {
+class InvoiceAdd extends StatefulWidget {
 // If update then pass in an Academic year instance
-  final Category? category;
-  const CategoryAdd({super.key, this.category});
+  final Sale sale;
+  const InvoiceAdd({super.key,required this.sale});
 
   @override
-  State<StatefulWidget> createState() => _CategoryFormState();
+  State<StatefulWidget> createState() => _InvoiceFormState();
 }
 
-class _CategoryFormState extends State<CategoryAdd> {
+class _InvoiceFormState extends State<InvoiceAdd> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nameController = TextEditingController();
   // Add controllers for other fields as needed
-  CategoryController catController =
-      Get.put(CategoryController());
+  InvoiceController invoiceController =
+      Get.put(InvoiceController());
 
+SaleController saleCOntroller =
+      Get.put(SaleController());
   @override
   void initState() {
-    _nameController.text = (widget.category == null
-        ? ''
-        : widget.category?.name.toString())!;
 
     super.initState();
   }
@@ -49,7 +48,7 @@ class _CategoryFormState extends State<CategoryAdd> {
             // Academic Year Name
             TextFormBox(
               controller: _nameController,
-              placeholder: 'Enter academic year name',
+              placeholder: 'To',
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please enter academic year';
@@ -57,6 +56,7 @@ class _CategoryFormState extends State<CategoryAdd> {
                 return null;
               },
             ),
+           
             // Add other fields as needed
 
             // Submit Button
@@ -79,16 +79,8 @@ class _CategoryFormState extends State<CategoryAdd> {
 
   void _submitForm() {
     // Perform actions when the form is submitted
-    String cat_name = _nameController.text;
-    if (widget.category != null) {
-      Category? model = widget.category;
-      model?.name = cat_name;
-      catController.addModel(model!);
-    } else {
-      Category model = Category();
-      model.name = cat_name;
-      catController.addModel(model);
-    }
+    // String cat_name = _nameController.text;
+   
     // Clear form fields
     _nameController.clear();
     Navigator.pop(context);

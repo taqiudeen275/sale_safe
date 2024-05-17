@@ -23,8 +23,10 @@ class _SalesScreenState extends State<SalesScreen> {
   DateTime? selectedDate;
   @override
   void initState() {
-    //    salesController.deleteBulkModels(salesController.models);
+    // salesController.deleteBulkModels(salesController.models);
     // orderController.deleteBulkModels(orderController.models);
+    salesController.fetchByDate(DateTime.now());
+
     // TODO: implement initState
     super.initState();
   }
@@ -66,9 +68,10 @@ class _SalesScreenState extends State<SalesScreen> {
                   ),
                   Text(
                     selectedDate != null
-                        ? "${formatDateTime(selectedDate!, dateOnly: true)} Sales"
+                        ? "${formatDateTime(selectedDate!, dateOnly: true) == formatDateTime(DateTime.now(), dateOnly: true) ? 'TODAY\'S' : formatDateTime(selectedDate!, dateOnly: true)} Sales"
                         : "TODAY'S SALES",
-                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                        fontSize: 30, fontWeight: FontWeight.bold),
                   )
                 ],
               ),
@@ -79,7 +82,7 @@ class _SalesScreenState extends State<SalesScreen> {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ...salesController.selectedSale.map((sale) => Expander(
+                      ...salesController.salesByDate.map((sale) => Expander(
                             header: Text(
                                 'Sales at  ${sale.date?.toLocal().toString()}'),
                             content: SizedBox(
@@ -92,6 +95,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                       overflowBehavior:
                                           CommandBarOverflowBehavior.noWrap,
                                       primaryItems: [
+                                        if (sale.plInvoices!.isNotEmpty)
                                         CommandBarBuilderItem(
                                           builder: (context, mode, w) =>
                                               Tooltip(
@@ -100,8 +104,22 @@ class _SalesScreenState extends State<SalesScreen> {
                                             child: w,
                                           ),
                                           wrappedItem: CommandBarButton(
-                                            icon: const Icon(FluentIcons.view),
+                                            icon: const Icon(FluentIcons.receipt_check),
                                             label: const Text('View Invoice'),
+                                            onPressed: () {},
+                                          ),
+                                        ),
+                                         if (sale.plInvoices!.isEmpty)
+                                        CommandBarBuilderItem(
+                                          builder: (context, mode, w) =>
+                                              Tooltip(
+                                            message:
+                                                "Create a an invoice for this sale",
+                                            child: w,
+                                          ),
+                                          wrappedItem: CommandBarButton(
+                                            icon: const Icon(FluentIcons.view),
+                                            label: const Text('Create Invoice'),
                                             onPressed: () {},
                                           ),
                                         ),
@@ -332,26 +350,7 @@ class RecordSale extends StatelessWidget {
                           onPressed: productController.selectedItems.isEmpty
                               ? null
                               : () async {
-                                  int saleId =
-                                      await salesController.addGetModel(Sale(
-                                          isCredit: isCredit.value,
-                                          date: DateTime.now(),
-                                          amount: orderController.selectedItems
-                                              .fold(
-                                                  0.0,
-                                                  (sum, product) =>
-                                                      sum! + product.amount!)));
-
-                                  await orderController
-                                      .onItemSelectedSave(saleId);
-
-                                  productController.onProuctSale(
-                                      productController.selectedItems,
-                                      orderController.selectedItems
-                                          .map((element) =>
-                                              element.quantity ?? 0)
-                                          .toList());
-                                  await productController.fetchModels();
+                                  await saleItemAdd();
                                   // ignore: use_build_context_synchronously
                                   Navigator.pop(context);
                                 },
@@ -362,5 +361,29 @@ class RecordSale extends StatelessWidget {
           ]);
         },
         child: const Text("Record Sale"));
+  }
+
+  Future<void> saleItemAdd() async {
+     int saleId =
+        await salesController.addGetModel(Sale(
+            isCredit: isCredit.value,
+            date: DateTime.now(),
+            amount: orderController.selectedItems
+                .fold(
+                    0.0,
+                    (sum, product) =>
+                        sum! + product.amount!)));
+    
+    await orderController
+        .onItemSelectedSave(saleId);
+    
+    productController.onProuctSale(
+        productController.selectedItems,
+        orderController.selectedItems
+            .map((element) =>
+                element.quantity ?? 0)
+            .toList());
+    await productController.fetchModels();
+     await salesController.fetchByDate(DateTime.now());
   }
 }

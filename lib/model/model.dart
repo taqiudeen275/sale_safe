@@ -153,12 +153,9 @@ const tableInvoice = SqfEntityTable(
           defaultValue: 0,
 
           ),
-      SqfEntityFieldRelationship(
-          parentTable: tablePaymentDetails,
-          deleteRule: DeleteRule.CASCADE,
-          defaultValue: 0,
-          relationType: RelationType.ONE_TO_MANY),
-      SqfEntityField("description", DbType.text),
+   
+      SqfEntityField("to", DbType.text),
+      SqfEntityField("invoice_number", DbType.text),
       SqfEntityField("amount", DbType.real),
       SqfEntityField("is_due", DbType.bool),
       SqfEntityField("is_paid", DbType.bool),
@@ -180,8 +177,8 @@ const tablePayment = SqfEntityTable(
           relationType: RelationType.ONE_TO_MANY,
           defaultValue: 0),
       SqfEntityFieldRelationship(
-          fieldName: 'invoice',
-          parentTable: tableInvoice,
+          fieldName: 'sale',
+          parentTable: tableSales,
           relationType: RelationType.ONE_TO_MANY,
           deleteRule: DeleteRule.CASCADE,
           defaultValue: 0),

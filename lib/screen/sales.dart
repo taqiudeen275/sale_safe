@@ -1,10 +1,19 @@
+import 'dart:io';
+
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sale_safe/data/forms/invoiceForm.dart';
 import 'package:sale_safe/model/model.dart';
+import 'package:sale_safe/utils/components/invoice_widget.dart';
 import 'package:sale_safe/utils/components/modal.dart';
 import 'package:sale_safe/utils/components/orderPick.dart';
+import 'package:sale_safe/utils/components/printableInvoice.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 import 'package:sale_safe/utils/utils.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class SalesScreen extends StatefulWidget {
   SalesScreen({super.key});
@@ -23,8 +32,6 @@ class _SalesScreenState extends State<SalesScreen> {
   DateTime? selectedDate;
   @override
   void initState() {
-    // salesController.deleteBulkModels(salesController.models);
-    // orderController.deleteBulkModels(orderController.models);
     salesController.fetchByDate(DateTime.now());
 
     // TODO: implement initState
@@ -95,34 +102,81 @@ class _SalesScreenState extends State<SalesScreen> {
                                       overflowBehavior:
                                           CommandBarOverflowBehavior.noWrap,
                                       primaryItems: [
-                                        if (sale.plInvoices!.isNotEmpty)
-                                        CommandBarBuilderItem(
-                                          builder: (context, mode, w) =>
-                                              Tooltip(
-                                            message:
-                                                "View and Print invoice of this sale",
-                                            child: w,
+                                        if (sale.plInvoices!.any((element) =>
+                                            element.salesId == sale.id))
+                                          CommandBarBuilderItem(
+                                            builder: (context, mode, w) =>
+                                                Tooltip(
+                                              message:
+                                                  "View and Print invoice of this sale",
+                                              child: w,
+                                            ),
+                                            wrappedItem: CommandBarButton(
+                                              icon: const Icon(
+                                                  FluentIcons.receipt_check),
+                                              label: const Text('View Invoice'),
+                                              onPressed: () async {
+                                                Invoice? invoice =
+                                                    await invoiceController
+                                                        .getBySaleId(sale.id!);
+                                                // ignore: use_build_context_synchronously
+                                                bigActionModal(
+                                                    context,
+                                                    const Text("Invoice"),
+                                                    SingleChildScrollView(
+                                                        child: InvoiceWidget(
+                                                            invoiceNumber: invoice!
+                                                                .invoice_number
+                                                                .toString(),
+                                                            invoiceDate:
+                                                                invoice.date!,
+                                                            to: invoice
+                                                                .customer_name!,
+                                                            invoiceItems: sale
+                                                                .plOrders!)),
+                                                    [
+                                                      FilledButton(
+                                                          child: const Text(
+                                                              "Print"),
+                                                          onPressed: () async {
+                                                            
+                                                          }),
+                                                      Button(
+                                                          child: const Text(
+                                                              "Close"),
+                                                          onPressed: () {
+                                                            Navigator.pop(
+                                                                context);
+                                                          })
+                                                    ]);
+                                              },
+                                            ),
                                           ),
-                                          wrappedItem: CommandBarButton(
-                                            icon: const Icon(FluentIcons.receipt_check),
-                                            label: const Text('View Invoice'),
-                                            onPressed: () {},
+                                        if (!sale.plInvoices!.any((element) =>
+                                            element.salesId == sale.id))
+                                          CommandBarBuilderItem(
+                                            builder: (context, mode, w) =>
+                                                Tooltip(
+                                              message:
+                                                  "Create a an invoice for this sale",
+                                              child: w,
+                                            ),
+                                            wrappedItem: CommandBarButton(
+                                              icon:
+                                                  const Icon(FluentIcons.view),
+                                              label:
+                                                  const Text('Create Invoice'),
+                                              onPressed: () {
+                                                actionModal(
+                                                    context,
+                                                    const Text("Add Invoice"),
+                                                    InvoiceAdd(
+                                                      sale: sale,
+                                                    ),
+                                                    []);
+                                              },
+                                            ),
                                           ),
-                                        ),
-                                         if (sale.plInvoices!.isEmpty)
-                                        CommandBarBuilderItem(
-                                          builder: (context, mode, w) =>
-                                              Tooltip(
-                                            message:
-                                                "Create a an invoice for this sale",
-                                            child: w,
-                                          ),
-                                          wrappedItem: CommandBarButton(
-                                            icon: const Icon(FluentIcons.view),
-                                            label: const Text('Create Invoice'),
-                                            onPressed: () {},
-                                          ),
-                                        ),
                                         CommandBarBuilderItem(
                                           builder: (context, mode, w) =>
                                               Tooltip(
@@ -251,8 +305,9 @@ class _SalesScreenState extends State<SalesScreen> {
                                                 child: Padding(
                                                   padding:
                                                       const EdgeInsets.all(8.0),
-                                                  child: Text(
-                                                      '${order.plProduct!.price}'),
+                                                  child: Text(order
+                                                      .plProduct!.price!
+                                                      .toStringAsFixed(2)),
                                                 ),
                                               ),
                                               TableCell(
@@ -267,8 +322,8 @@ class _SalesScreenState extends State<SalesScreen> {
                                                 child: Padding(
                                                   padding:
                                                       const EdgeInsets.all(8.0),
-                                                  child: Text(
-                                                      order.amount.toString()),
+                                                  child: Text(order.amount!
+                                                      .toStringAsFixed(2)),
                                                 ),
                                               ),
                                             ]))
@@ -284,7 +339,8 @@ class _SalesScreenState extends State<SalesScreen> {
                                                 fontSize: 20,
                                                 fontWeight: FontWeight.bold),
                                           ),
-                                          Text("GH¢  ${sale.amount.toString()}",
+                                          Text(
+                                              "GH¢  ${sale.amount!.toStringAsFixed(2)}",
                                               style: const TextStyle(
                                                   fontSize: 20,
                                                   fontWeight: FontWeight.bold)),
@@ -364,26 +420,20 @@ class RecordSale extends StatelessWidget {
   }
 
   Future<void> saleItemAdd() async {
-     int saleId =
-        await salesController.addGetModel(Sale(
-            isCredit: isCredit.value,
-            date: DateTime.now(),
-            amount: orderController.selectedItems
-                .fold(
-                    0.0,
-                    (sum, product) =>
-                        sum! + product.amount!)));
-    
-    await orderController
-        .onItemSelectedSave(saleId);
-    
+    int saleId = await salesController.addGetModel(Sale(
+        isCredit: isCredit.value,
+        date: DateTime.now(),
+        amount: orderController.selectedItems
+            .fold(0.0, (sum, product) => sum! + product.amount!)));
+
+    await orderController.onItemSelectedSave(saleId);
+
     productController.onProuctSale(
         productController.selectedItems,
         orderController.selectedItems
-            .map((element) =>
-                element.quantity ?? 0)
+            .map((element) => element.quantity ?? 0)
             .toList());
     await productController.fetchModels();
-     await salesController.fetchByDate(DateTime.now());
+    await salesController.fetchByDate(DateTime.now());
   }
 }

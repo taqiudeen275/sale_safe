@@ -63,7 +63,7 @@ class InvoiceWidget extends StatelessWidget {
             children: [
               Text(
                 'TO: ${to.toUpperCase()}',
-                style: const TextStyle(fontSize: 14.0),
+                style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
               ),
               Container(
                 decoration: const BoxDecoration(
@@ -83,11 +83,13 @@ class InvoiceWidget extends StatelessWidget {
                 children: [
                   Text(
                     'INVOICE NO.: $invoiceNumber',
-                    style: const TextStyle(fontSize: 16.0),
+                    style: const TextStyle(
+                        fontSize: 16.0, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     'DATE OF INVOICE: ${invoiceDate.day}/${invoiceDate.month}/${invoiceDate.year}',
-                    style: const TextStyle(fontSize: 16.0),
+                    style: const TextStyle(
+                        fontSize: 16.0, fontWeight: FontWeight.bold),
                   ),
                 ],
               )
@@ -98,7 +100,7 @@ class InvoiceWidget extends StatelessWidget {
             defaultVerticalAlignment: TableCellVerticalAlignment.middle,
             border: TableBorder.all(),
             columnWidths: const {
-               0: FixedColumnWidth(30.0),
+              0: FixedColumnWidth(60.0),
             },
             children: [
               const TableRow(
@@ -190,7 +192,8 @@ class InvoiceWidget extends StatelessWidget {
                       TableCell(
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Text(item.plProduct!.price!.toStringAsFixed(2)),
+                          child:
+                              Text(item.plProduct!.price!.toStringAsFixed(2)),
                         ),
                       ),
                       TableCell(
@@ -231,16 +234,6 @@ class InvoiceWidget extends StatelessWidget {
   }
 }
 
-class InvoiceItem {
-  final String description;
-  final int quantity;
-  final double rate;
-  final double total;
 
-  InvoiceItem({
-    required this.description,
-    required this.quantity,
-    required this.rate,
-    required this.total,
-  });
-}
+
+

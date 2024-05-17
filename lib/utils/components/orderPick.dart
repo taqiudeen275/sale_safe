@@ -122,15 +122,17 @@ class _OrderPickState extends State<OrderPick> {
                                               width: 40,
                                             ),
                                             Text(
-                                              "${product.description}",
+                                              
+                                              "${product.description!.substring(0,10)}...",
                                               style: const TextStyle(
                                                   fontWeight: FontWeight.w100),
+                                                
                                             ),
                                             const SizedBox(
                                               width: 20,
                                             ),
                                             Text(
-                                              "GH¢ ${product.price}",
+                                              "GH¢ ${product.price!.toStringAsFixed(2)}",
                                               style: const TextStyle(
                                                   fontWeight: FontWeight.w100),
                                             ),
@@ -193,7 +195,7 @@ class _OrderPickState extends State<OrderPick> {
                                                   width: 40,
                                                 ),
                                                 Text(
-                                                  "${product.description}",
+                                                  "${product.description!.substring(0,10)}...",
                                                   style: const TextStyle(
                                                       fontWeight:
                                                           FontWeight.w100),
@@ -202,7 +204,7 @@ class _OrderPickState extends State<OrderPick> {
                                                   width: 20,
                                                 ),
                                                 Text(
-                                                  "GH¢ ${product.price}",
+                                                  "GH¢ ${product.price!.toStringAsFixed(2)}",
                                                   style: const TextStyle(
                                                       fontWeight:
                                                           FontWeight.w100),
@@ -230,7 +232,7 @@ class _OrderPickState extends State<OrderPick> {
                                         fontSize: 24,
                                       )),
                                   Text(
-                                    "TOTAL: GH¢ ${orderController.selectedItems.fold(0.0, (sum, order) => sum + (order.amount! + sum)).toString()}",
+                                    "TOTAL: GH¢ ${orderController.selectedItems.fold(0.0, (sum, order) => sum + (order.amount! + sum)).toStringAsFixed(2)}",
                                     style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold),
@@ -242,7 +244,7 @@ class _OrderPickState extends State<OrderPick> {
                               ),
                               SizedBox(
                                 height:
-                                    MediaQuery.of(context).size.height * 0.5,
+                                    MediaQuery.of(context).size.height,
                                 child: ListView.builder(
                                   itemCount:
                                       orderController.selectedItems.length,
@@ -274,7 +276,7 @@ class _OrderPickState extends State<OrderPick> {
                                                   fontSize: 16),
                                             ),
                                             Text(
-                                              "${product.description}",
+                                              "${product.description!.substring(0,10)}...",
                                               style: const TextStyle(
                                                   fontWeight: FontWeight.w100),
                                             ),
@@ -335,7 +337,7 @@ class _OrderPickState extends State<OrderPick> {
                                               ),
                                             ),
                                             Text(
-                                              "GH¢ ${order.amount}",
+                                              "GH¢ ${order.amount!.toStringAsFixed(2)}",
                                               style: const TextStyle(
                                                   fontWeight: FontWeight.bold),
                                             ),

@@ -24,7 +24,7 @@ class _MainPageState extends State<MainPage> {
     PaneItem(
         title: const Text('Inventory'),
         icon: const Icon(Iconsax.box),
-        body: ProductScreen()),
+        body: const ProductScreen()),
     PaneItem(
         title: const Text('Sales'),
         icon:  const Icon(Iconsax.dollar_square),

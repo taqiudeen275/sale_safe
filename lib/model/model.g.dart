@@ -231,18 +231,13 @@ class TableInvoice extends SqfEntityTableBase {
 
     // declare fields
     fields = [
-      SqfEntityFieldBase('number', DbType.integer),
       SqfEntityFieldRelationshipBase(TableSale.getInstance, DeleteRule.CASCADE,
           relationType: RelationType.ONE_TO_MANY,
           fieldName: 'salesId',
           defaultValue: 0),
-      SqfEntityFieldBase('to', DbType.text),
+      SqfEntityFieldBase('customer_name', DbType.text),
       SqfEntityFieldBase('invoice_number', DbType.text),
       SqfEntityFieldBase('amount', DbType.real),
-      SqfEntityFieldBase('is_due', DbType.bool),
-      SqfEntityFieldBase('is_paid', DbType.bool),
-      SqfEntityFieldBase('due_date', DbType.date,
-          minValue: DateTime.parse('1900-01-01')),
       SqfEntityFieldBase('date', DbType.datetime,
           minValue: DateTime.parse('1900-01-01')),
     ];
@@ -7532,44 +7527,21 @@ class OrderManager extends SqfEntityProvider {
 class Invoice extends TableBase {
   Invoice(
       {this.id,
-      this.number,
       this.salesId,
-      this.to,
+      this.customer_name,
       this.invoice_number,
       this.amount,
-      this.is_due,
-      this.is_paid,
-      this.due_date,
       this.date,
       this.isDeleted}) {
     _setDefaultValues();
     softDeleteActivated = true;
   }
-  Invoice.withFields(
-      this.number,
-      this.salesId,
-      this.to,
-      this.invoice_number,
-      this.amount,
-      this.is_due,
-      this.is_paid,
-      this.due_date,
-      this.date,
-      this.isDeleted) {
+  Invoice.withFields(this.salesId, this.customer_name, this.invoice_number,
+      this.amount, this.date, this.isDeleted) {
     _setDefaultValues();
   }
-  Invoice.withId(
-      this.id,
-      this.number,
-      this.salesId,
-      this.to,
-      this.invoice_number,
-      this.amount,
-      this.is_due,
-      this.is_paid,
-      this.due_date,
-      this.date,
-      this.isDeleted) {
+  Invoice.withId(this.id, this.salesId, this.customer_name, this.invoice_number,
+      this.amount, this.date, this.isDeleted) {
     _setDefaultValues();
   }
   // fromMap v2.0
@@ -7578,33 +7550,16 @@ class Invoice extends TableBase {
       _setDefaultValues();
     }
     id = int.tryParse(o['id'].toString());
-    if (o['number'] != null) {
-      number = int.tryParse(o['number'].toString());
-    }
     salesId = int.tryParse(o['salesId'].toString());
 
-    if (o['to'] != null) {
-      to = o['to'].toString();
+    if (o['customer_name'] != null) {
+      customer_name = o['customer_name'].toString();
     }
     if (o['invoice_number'] != null) {
       invoice_number = o['invoice_number'].toString();
     }
     if (o['amount'] != null) {
       amount = double.tryParse(o['amount'].toString());
-    }
-    if (o['is_due'] != null) {
-      is_due =
-          o['is_due'].toString() == '1' || o['is_due'].toString() == 'true';
-    }
-    if (o['is_paid'] != null) {
-      is_paid =
-          o['is_paid'].toString() == '1' || o['is_paid'].toString() == 'true';
-    }
-    if (o['due_date'] != null) {
-      due_date = int.tryParse(o['due_date'].toString()) != null
-          ? DateTime.fromMillisecondsSinceEpoch(
-              int.tryParse(o['due_date'].toString())!)
-          : DateTime.tryParse(o['due_date'].toString());
     }
     if (o['date'] != null) {
       date = int.tryParse(o['date'].toString()) != null
@@ -7624,14 +7579,10 @@ class Invoice extends TableBase {
   }
   // FIELDS (Invoice)
   int? id;
-  int? number;
   int? salesId;
-  String? to;
+  String? customer_name;
   String? invoice_number;
   double? amount;
-  bool? is_due;
-  bool? is_paid;
-  DateTime? due_date;
   DateTime? date;
   bool? isDeleted;
 
@@ -7664,9 +7615,6 @@ class Invoice extends TableBase {
       {bool forQuery = false, bool forJson = false, bool forView = false}) {
     final map = <String, dynamic>{};
     map['id'] = id;
-    if (number != null || !forView) {
-      map['number'] = number;
-    }
     if (salesId != null) {
       map['salesId'] = forView
           ? plSale == null
@@ -7676,34 +7624,14 @@ class Invoice extends TableBase {
     } else if (salesId != null || !forView) {
       map['salesId'] = null;
     }
-    if (to != null || !forView) {
-      map['to'] = to;
+    if (customer_name != null || !forView) {
+      map['customer_name'] = customer_name;
     }
     if (invoice_number != null || !forView) {
       map['invoice_number'] = invoice_number;
     }
     if (amount != null || !forView) {
       map['amount'] = amount;
-    }
-    if (is_due != null) {
-      map['is_due'] = forQuery ? (is_due! ? 1 : 0) : is_due;
-    } else if (is_due != null || !forView) {
-      map['is_due'] = null;
-    }
-    if (is_paid != null) {
-      map['is_paid'] = forQuery ? (is_paid! ? 1 : 0) : is_paid;
-    } else if (is_paid != null || !forView) {
-      map['is_paid'] = null;
-    }
-    if (due_date != null) {
-      map['due_date'] = forJson
-          ? '$due_date!.year-$due_date!.month-$due_date!.day'
-          : forQuery
-              ? DateTime(due_date!.year, due_date!.month, due_date!.day)
-                  .millisecondsSinceEpoch
-              : due_date;
-    } else if (due_date != null || !forView) {
-      map['due_date'] = null;
     }
     if (date != null) {
       map['date'] = forJson
@@ -7728,9 +7656,6 @@ class Invoice extends TableBase {
       bool forView = false]) async {
     final map = <String, dynamic>{};
     map['id'] = id;
-    if (number != null || !forView) {
-      map['number'] = number;
-    }
     if (salesId != null) {
       map['salesId'] = forView
           ? plSale == null
@@ -7740,34 +7665,14 @@ class Invoice extends TableBase {
     } else if (salesId != null || !forView) {
       map['salesId'] = null;
     }
-    if (to != null || !forView) {
-      map['to'] = to;
+    if (customer_name != null || !forView) {
+      map['customer_name'] = customer_name;
     }
     if (invoice_number != null || !forView) {
       map['invoice_number'] = invoice_number;
     }
     if (amount != null || !forView) {
       map['amount'] = amount;
-    }
-    if (is_due != null) {
-      map['is_due'] = forQuery ? (is_due! ? 1 : 0) : is_due;
-    } else if (is_due != null || !forView) {
-      map['is_due'] = null;
-    }
-    if (is_paid != null) {
-      map['is_paid'] = forQuery ? (is_paid! ? 1 : 0) : is_paid;
-    } else if (is_paid != null || !forView) {
-      map['is_paid'] = null;
-    }
-    if (due_date != null) {
-      map['due_date'] = forJson
-          ? '$due_date!.year-$due_date!.month-$due_date!.day'
-          : forQuery
-              ? DateTime(due_date!.year, due_date!.month, due_date!.day)
-                  .millisecondsSinceEpoch
-              : due_date;
-    } else if (due_date != null || !forView) {
-      map['due_date'] = null;
     }
     if (date != null) {
       map['date'] = forJson
@@ -7800,14 +7705,10 @@ class Invoice extends TableBase {
   @override
   List<dynamic> toArgs() {
     return [
-      number,
       salesId,
-      to,
+      customer_name,
       invoice_number,
       amount,
-      is_due,
-      is_paid,
-      due_date != null ? due_date!.millisecondsSinceEpoch : null,
       date != null ? date!.millisecondsSinceEpoch : null,
       isDeleted
     ];
@@ -7817,14 +7718,10 @@ class Invoice extends TableBase {
   List<dynamic> toArgsWithIds() {
     return [
       id,
-      number,
       salesId,
-      to,
+      customer_name,
       invoice_number,
       amount,
-      is_due,
-      is_paid,
-      due_date != null ? due_date!.millisecondsSinceEpoch : null,
       date != null ? date!.millisecondsSinceEpoch : null,
       isDeleted
     ];
@@ -7933,8 +7830,6 @@ class Invoice extends TableBase {
   @override
   Future<int?> save({bool ignoreBatch = true}) async {
     if (id == null || id == 0) {
-      number = await IdentitySequence().nextVal();
-
       id = await _mnInvoice.insert(this, ignoreBatch);
     } else {
       await _mnInvoice.update(this);
@@ -7949,8 +7844,6 @@ class Invoice extends TableBase {
   @override
   Future<int?> saveOrThrow({bool ignoreBatch = true}) async {
     if (id == null || id == 0) {
-      number = await IdentitySequence().nextVal();
-
       id = await _mnInvoice.insertOrThrow(this, ignoreBatch);
 
       isInsert = true;
@@ -8002,17 +7895,13 @@ class Invoice extends TableBase {
   Future<int?> upsert({bool ignoreBatch = true}) async {
     try {
       final result = await _mnInvoice.rawInsert(
-          'INSERT OR REPLACE INTO invoice (id, number, salesId, to, invoice_number, amount, is_due, is_paid, due_date, date,isDeleted)  VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+          'INSERT OR REPLACE INTO invoice (id, salesId, customer_name, invoice_number, amount, date,isDeleted)  VALUES (?,?,?,?,?,?,?)',
           [
             id,
-            number,
             salesId,
-            to,
+            customer_name,
             invoice_number,
             amount,
-            is_due,
-            is_paid,
-            due_date != null ? due_date!.millisecondsSinceEpoch : null,
             date != null ? date!.millisecondsSinceEpoch : null,
             isDeleted
           ],
@@ -8041,7 +7930,7 @@ class Invoice extends TableBase {
   Future<BoolCommitResult> upsertAll(List<Invoice> invoices,
       {bool? exclusive, bool? noResult, bool? continueOnError}) async {
     final results = await _mnInvoice.rawInsertAll(
-        'INSERT OR REPLACE INTO invoice (id, number, salesId, to, invoice_number, amount, is_due, is_paid, due_date, date,isDeleted)  VALUES (?,?,?,?,?,?,?,?,?,?,?)',
+        'INSERT OR REPLACE INTO invoice (id, salesId, customer_name, invoice_number, amount, date,isDeleted)  VALUES (?,?,?,?,?,?,?)',
         invoices,
         exclusive: exclusive,
         noResult: noResult,
@@ -8307,19 +8196,15 @@ class InvoiceFilterBuilder extends ConjunctionBase {
     return _id = _setField(_id, 'id', DbType.integer);
   }
 
-  InvoiceField? _number;
-  InvoiceField get number {
-    return _number = _setField(_number, 'number', DbType.integer);
-  }
-
   InvoiceField? _salesId;
   InvoiceField get salesId {
     return _salesId = _setField(_salesId, 'salesId', DbType.integer);
   }
 
-  InvoiceField? _to;
-  InvoiceField get to {
-    return _to = _setField(_to, 'to', DbType.text);
+  InvoiceField? _customer_name;
+  InvoiceField get customer_name {
+    return _customer_name =
+        _setField(_customer_name, 'customer_name', DbType.text);
   }
 
   InvoiceField? _invoice_number;
@@ -8331,21 +8216,6 @@ class InvoiceFilterBuilder extends ConjunctionBase {
   InvoiceField? _amount;
   InvoiceField get amount {
     return _amount = _setField(_amount, 'amount', DbType.real);
-  }
-
-  InvoiceField? _is_due;
-  InvoiceField get is_due {
-    return _is_due = _setField(_is_due, 'is_due', DbType.bool);
-  }
-
-  InvoiceField? _is_paid;
-  InvoiceField get is_paid {
-    return _is_paid = _setField(_is_paid, 'is_paid', DbType.bool);
-  }
-
-  InvoiceField? _due_date;
-  InvoiceField get due_date {
-    return _due_date = _setField(_due_date, 'due_date', DbType.date);
   }
 
   InvoiceField? _date;
@@ -8601,21 +8471,16 @@ class InvoiceFields {
     return _fId = _fId ?? SqlSyntax.setField(_fId, 'id', DbType.integer);
   }
 
-  static TableField? _fNumber;
-  static TableField get number {
-    return _fNumber =
-        _fNumber ?? SqlSyntax.setField(_fNumber, 'number', DbType.integer);
-  }
-
   static TableField? _fSalesId;
   static TableField get salesId {
     return _fSalesId =
         _fSalesId ?? SqlSyntax.setField(_fSalesId, 'salesId', DbType.integer);
   }
 
-  static TableField? _fTo;
-  static TableField get to {
-    return _fTo = _fTo ?? SqlSyntax.setField(_fTo, 'to', DbType.text);
+  static TableField? _fCustomer_name;
+  static TableField get customer_name {
+    return _fCustomer_name = _fCustomer_name ??
+        SqlSyntax.setField(_fCustomer_name, 'customer_name', DbType.text);
   }
 
   static TableField? _fInvoice_number;
@@ -8628,24 +8493,6 @@ class InvoiceFields {
   static TableField get amount {
     return _fAmount =
         _fAmount ?? SqlSyntax.setField(_fAmount, 'amount', DbType.real);
-  }
-
-  static TableField? _fIs_due;
-  static TableField get is_due {
-    return _fIs_due =
-        _fIs_due ?? SqlSyntax.setField(_fIs_due, 'is_due', DbType.bool);
-  }
-
-  static TableField? _fIs_paid;
-  static TableField get is_paid {
-    return _fIs_paid =
-        _fIs_paid ?? SqlSyntax.setField(_fIs_paid, 'is_paid', DbType.bool);
-  }
-
-  static TableField? _fDue_date;
-  static TableField get due_date {
-    return _fDue_date =
-        _fDue_date ?? SqlSyntax.setField(_fDue_date, 'due_date', DbType.date);
   }
 
   static TableField? _fDate;

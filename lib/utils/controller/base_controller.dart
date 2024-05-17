@@ -311,6 +311,13 @@ class InvoiceController extends BaseSqfEntityController<Invoice> {
     return super.fetchModels();
   }
 
+  Future<Invoice?> getById(int id) async {
+    return await Invoice().getById(id,preload: true);
+  }
+ Future<Invoice?> getBySaleId(int id) async {
+    return await Invoice().select().salesId.equals(id).toSingle(preload: true);
+  }
+
   Future<void> deleteById(int id) async {
     await Invoice().select().id.equals(id).delete();
     await fetchModels();

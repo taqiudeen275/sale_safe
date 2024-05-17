@@ -145,7 +145,6 @@ const tableInvoice = SqfEntityTable(
     primaryKeyType: PrimaryKeyType.integer_auto_incremental,
     useSoftDeleting: true,
     fields: [
-      SqfEntityField('number', DbType.integer, sequencedBy: seqIdentity),
       SqfEntityFieldRelationship(
           parentTable: tableSales,
           relationType: RelationType.ONE_TO_MANY,
@@ -154,12 +153,9 @@ const tableInvoice = SqfEntityTable(
 
           ),
    
-      SqfEntityField("to", DbType.text),
+      SqfEntityField("customer_name", DbType.text),
       SqfEntityField("invoice_number", DbType.text),
       SqfEntityField("amount", DbType.real),
-      SqfEntityField("is_due", DbType.bool),
-      SqfEntityField("is_paid", DbType.bool),
-      SqfEntityField("due_date", DbType.date),
       SqfEntityField("date", DbType.datetime),
     ]);
 

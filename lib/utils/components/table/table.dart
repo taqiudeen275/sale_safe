@@ -40,14 +40,21 @@ class _SqfEntityDBTableState extends State<SqfEntityDBTable> {
                   IconButton(
                       onPressed: () {
                         actionModal(
-                            context, widget.addTitle, widget.addContent, []);
+                          context,
+                          widget.addTitle,
+                          widget.addContent,
+                          [
+                            FilledButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text("Close"))
+                          ],
+                        );
                       },
                       icon: const Icon(Icons.add)),
                 ],
             rowsPerPage: widget.rowsPerPage,
             showCheckboxColumn: true,
             columns: widget.columns,
-            
             source: widget.source),
       )
     ]);

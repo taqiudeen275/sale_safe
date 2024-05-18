@@ -11,31 +11,6 @@ import 'view.list.dart';
 part 'model.g.dart';
 // part 'model.g.view.dart'; // you do not need this part if you do not want to use the Form Generator property
 
-const tableUser = SqfEntityTable(
-  tableName: "users",
-  primaryKeyName: "id",
-  primaryKeyType: PrimaryKeyType.integer_auto_incremental,
-  useSoftDeleting: true,
-  fields: [
-    SqfEntityField("username", DbType.text), // Username with max length
-    SqfEntityField("password", DbType.text), // Password (hashed and secured)
-    SqfEntityField("email", DbType.text), // Unique email address
-    SqfEntityField("firstName", DbType.text),
-    SqfEntityField("lastName", DbType.text),
-    // Add more fields as needed (e.g., phone number, address)
-  ],
-);
-
-
-// CATEGORIES
-const tableCategory = SqfEntityTable(
-    tableName: 'category',
-    primaryKeyName: 'id',
-    primaryKeyType: PrimaryKeyType.integer_auto_incremental,
-    useSoftDeleting: true,
-    fields: [
-      SqfEntityField('name', DbType.text),
-    ]);
 
 //Product Table
 const tableProduct = SqfEntityTable(
@@ -49,12 +24,6 @@ const tableProduct = SqfEntityTable(
       SqfEntityField('cost', DbType.real),
       SqfEntityField('price', DbType.real),
       SqfEntityField('quantity', DbType.integer),
-      SqfEntityFieldRelationship(
-          parentTable: tableCategory,
-          isNotNull: false,
-          defaultValue: 0,
-          relationType: RelationType.ONE_TO_MANY,
-          deleteRule: DeleteRule.SET_NULL),
       SqfEntityField('reference', DbType.integer, sequencedBy: seqIdentity),
       SqfEntityField('image_url', DbType.text),
       SqfEntityField("expiry_date", DbType.datetime),
@@ -74,17 +43,6 @@ const tablePaymentMethods = SqfEntityTable(
     ]);
 
 // LEAD / CUSTOMER
-const tableLead = SqfEntityTable(
-    tableName: "lead",
-    primaryKeyName: "id",
-    primaryKeyType: PrimaryKeyType.integer_auto_incremental,
-    useSoftDeleting: true,
-    fields: [
-      SqfEntityField('name', DbType.text),
-      SqfEntityField('email', DbType.text),
-      SqfEntityField('phone', DbType.text),
-      SqfEntityField('date', DbType.datetime),
-    ]);
 
 // SUPPLIER
 const tableSupplier = SqfEntityTable(
@@ -210,17 +168,6 @@ const tableSales = SqfEntityTable(
     ]);
 
 
-// Profit and Loss Period Table
-const tablePeriod = SqfEntityTable(
-    tableName: 'period',
-    primaryKeyName: 'id',
-    primaryKeyType: PrimaryKeyType.integer_auto_incremental,
-    useSoftDeleting: true,
-    modelName: "period",
-    fields: [
-      SqfEntityField("start_date", DbType.date),
-      SqfEntityField("end_date", DbType.date),
-    ]);
 
 // Profit and Loss Table
 const tableProfitAndLoss = SqfEntityTable(
@@ -230,11 +177,6 @@ const tableProfitAndLoss = SqfEntityTable(
     useSoftDeleting: true,
     modelName: "profitAndLoss",
     fields: [
-      SqfEntityFieldRelationship(
-          parentTable: tablePeriod,
-          relationType: RelationType.ONE_TO_ONE,
-          deleteRule: DeleteRule.CASCADE,
-          defaultValue: 0), // Relationship column for CategoryId of Product
       SqfEntityField("revenue", DbType.real),
       SqfEntityField("cost", DbType.real),
       SqfEntityField("expense", DbType.real),
@@ -255,13 +197,17 @@ const tableProductRecords = SqfEntityTable(
           relationType: RelationType.ONE_TO_MANY,
           deleteRule: DeleteRule.SET_NULL,
           defaultValue: 0),     
-    SqfEntityField("name", DbType.text), // Username with max length
-    SqfEntityField("currentQuantity", DbType.text), // Username with max length
+    SqfEntityField("name", DbType.text),
+    SqfEntityField("currentQuantity", DbType.text),
     SqfEntityField("previousQuantity", DbType.text), 
-    SqfEntityField("action", DbType.text), // Unique email address
-     SqfEntityField("date", DbType.datetime),// Password (hashed and secured)
+    SqfEntityField("previousPrice", DbType.text), 
+        SqfEntityField("currentCurrent", DbType.text),
+    SqfEntityField("previousCost", DbType.text), 
+        SqfEntityField("currentCost", DbType.text),
+    SqfEntityField("action", DbType.text),
+     SqfEntityField("date", DbType.datetime),
     
-    // Add more fields as needed (e.g., phone number, address)
+
   ],
 );
 
@@ -283,9 +229,7 @@ const myDbModel = SqfEntityModel(
   databaseName: 'sales_safe.db',
   // put defined tables into the tables list.
   databaseTables: [
-    tableCategory,
     tableProduct,
-    tableLead,
     tableSupplier,
     tablePaymentMethods,
     tablePaymentDetails,
@@ -293,10 +237,9 @@ const myDbModel = SqfEntityModel(
     tableInvoice,
     tablePayment,
     tableSales,
-    tablePeriod,
     tableExpense,
     tableProfitAndLoss,
-    tableUser,
+    tableProductRecords
   ],
  
   // put defined sequences into the sequences list.

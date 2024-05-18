@@ -8,6 +8,7 @@ import 'package:sale_safe/model/model.dart';
 import 'package:sale_safe/utils/components/invoice_widget.dart';
 import 'package:sale_safe/utils/components/modal.dart';
 import 'package:sale_safe/utils/components/orderPick.dart';
+import 'package:sale_safe/utils/components/reciept_widget.dart';
 // import 'package:sale_safe/utils/components/printableInvoice.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 import 'package:sale_safe/utils/utils.dart';
@@ -197,7 +198,42 @@ class _SalesScreenState extends State<SalesScreen> {
                                             icon: const Icon(FluentIcons.view),
                                             label: const Text('View Reciept'),
                                             onPressed:
-                                                sale.isCredit! ? null : () {},
+                                                !sale.plInvoices!.any((element) =>
+                                            element.salesId == sale.id) ? null : () async {
+                                                   Invoice? invoice =
+                                                    await invoiceController
+                                                        .getBySaleId(sale.id!);
+                                                // ignore: use_build_context_synchronously
+                                                bigActionModal(
+                                                    context,
+                                                    const Text("Reciept"),
+                                                    SingleChildScrollView(
+                                                        child: ReceiptWidget(
+                                                            receiptNumber: invoice!
+                                                                .invoice_number
+                                                                .toString(),
+                                                            receiptDate:
+                                                                invoice.date!,
+                                                            to: invoice
+                                                                .customer_name!,
+                                                            receiptItems: sale
+                                                                .plOrders!)),
+                                                    [
+                                                      FilledButton(
+                                                          child: const Text(
+                                                              "Print"),
+                                                          onPressed: () async {
+                                                            
+                                                          }),
+                                                      Button(
+                                                          child: const Text(
+                                                              "Close"),
+                                                          onPressed: () {
+                                                            Navigator.pop(
+                                                                context);
+                                                          })
+                                                    ]);
+                                                },
                                           ),
                                         ),
                                         CommandBarBuilderItem(

@@ -37,7 +37,7 @@ class _MainPageState extends State<MainPage> {
     PaneItem(
         title: const Text('Suppliers'),
         icon: const Icon(FluentIcons.business_card),
-        body: SuppplierScreen()),
+        body: const SuppplierScreen()),
   ];
 
   int topIndex = 0;

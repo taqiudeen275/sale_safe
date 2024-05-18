@@ -4,6 +4,7 @@ import 'package:sale_safe/data/forms/productForm.dart';
 import 'package:sale_safe/model/model.dart';
 import 'package:sale_safe/utils/base_table.dart';
 import 'package:sale_safe/utils/components/modal.dart';
+import 'package:sale_safe/utils/components/table/productRecordTable.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 import 'package:sqfentity_gen/sqfentity_gen.dart';
 
@@ -74,7 +75,33 @@ class ProductsDataData extends SqfEntityDBTableDataSource {
       context,
       const Text("Update Product"),
       ProductAdd(product: await getById(index)),
-      [],
+      [FilledButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))],
+      
+    );
+    super.onEditPressed(index, context);
+  }
+
+  @override
+  Future<void> onViewPressed(index, context) async {
+    Product? product = await getById(index);
+    List<ProductRecord> productRecord =
+        await ProductRecord().select().productId.equals(product!.id).toList();
+    bigActionModal(
+      context,
+      const Text("Product Details"),
+      SingleChildScrollView(
+        child: Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+
+          children: [
+            if (productRecord.isNotEmpty)
+              ProductRecordTable(records: productRecord),
+            if (productRecord.isEmpty) const Text("No Product records")
+          ],
+        ),
+      ),
+      [FilledButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))],
+      
     );
     super.onEditPressed(index, context);
   }

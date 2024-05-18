@@ -26,39 +26,42 @@ class _PasswordUpdateState extends State<PasswordUpdate> {
       final confirmPassword = _confirmPasswordController.text;
 
       // Example: You might want to call an API to update the password
-      if (currentPassword == utilityController.getAdminPass){
-        newPassword == confirmPassword ? utilityController.setAdminPass(newPassword): null;
-        
-      showDialog(
-        context: context,
-        builder: (context) {
-          return ContentDialog(
-            title: const Text('Success'),
-            content: const Text('Password updated successfully.'),
-            actions: [
-              Button(
-                child: const Text('OK'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
+      if (currentPassword == utilityController.getAdminPass) {
+        if (newPassword == confirmPassword) {
+          utilityController.setAdminPass(newPassword);
+          showDialog(
+            context: context,
+            builder: (context) {
+              return ContentDialog(
+                title: const Text('Success'),
+                content: const Text('Password updated successfully.'),
+                actions: [
+                  Button(
+                    child: const Text('OK'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
           );
-        },
-      );
+        }else{
+
+        }
       }
-      
+
       // Clear the text fields after successful update
       _currentPasswordController.clear();
       _newPasswordController.clear();
       _confirmPasswordController.clear();
-
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Form(
+      
       key: _formKey,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -83,7 +86,7 @@ class _PasswordUpdateState extends State<PasswordUpdate> {
               placeholder: 'Enter your new password',
             ),
             const SizedBox(height: 16.0),
-            TextBox(
+            TextFormBox(
               placeholder: 'Confirm New Password',
               controller: _confirmPasswordController,
               obscureText: true,

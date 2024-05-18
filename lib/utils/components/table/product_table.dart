@@ -27,7 +27,8 @@ class _ProductTableViewState extends State<ProductTableView> {
       if (productController.models.isNotEmpty) {
         return SqfEntityDBTable(
           addTitle: const Text('Add Product'),
-          addContent: const ProductAdd(), // Replace with your product form widget
+          addContent:
+              const ProductAdd(), // Replace with your product form widget
           header: "Products",
           headerSize: 24,
           rowsPerPage: 10,
@@ -55,7 +56,6 @@ class _ProductTableViewState extends State<ProductTableView> {
               label: Text("Price GH¢"),
               numeric: true,
               tooltip: "Price",
-              
             ),
             material_ui.DataColumn(
               label: Text("Quantity"),
@@ -91,9 +91,8 @@ class _ProductTableViewState extends State<ProductTableView> {
                             FilledButton(
                               child: const Text('Yes'),
                               onPressed: () async {
-                                await productController
-                                    .deleteBulkByID(
-                                        productController.selectedID);
+                                await productController.deleteBulkByID(
+                                    productController.selectedID);
                                 // ignore: use_build_context_synchronously
                                 Navigator.pop(context);
                               },
@@ -116,12 +115,22 @@ class _ProductTableViewState extends State<ProductTableView> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Text('No Product available'),
-              SizedBox(height: 10,),
+              SizedBox(
+                height: 10,
+              ),
               material_ui.FilledButton.tonal(
                 child: const Text("Add Product"),
                 onPressed: () {
-                  actionModal(context, const Text('Add Product'),
-                      const ProductAdd(), []); // Replace with your product form widget
+                  actionModal(
+                    context,
+                    const Text('Add Product'),
+                    const ProductAdd(),
+                    [
+                      FilledButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Close"))
+                    ],
+                  ); // Replace with your product form widget
                 },
               ),
             ],

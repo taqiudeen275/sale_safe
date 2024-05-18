@@ -11,7 +11,8 @@ class SuppliersTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
-      child: Table(
+      child: Obx(() => supplierController.models.isEmpty ? const ProgressRing():
+       Table(
         // defaultColumnWidth: const IntrinsicColumnWidth(),
         border: TableBorder.all(color: Colors.grey),
         columnWidths: const {
@@ -60,7 +61,7 @@ class SuppliersTable extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ));
   }
 }
 

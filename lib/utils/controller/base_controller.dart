@@ -1,4 +1,3 @@
-import 'package:fluent_ui/fluent_ui.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:sale_safe/model/model.dart';
@@ -9,6 +8,7 @@ class BaseSqfEntityController<T extends TableBase> extends GetxController {
   RxList<T> models = <T>[].obs;
   RxString searchQuery = "".obs;
   RxList<T> selectedItems = <T>[].obs;
+  RxBool isLoading = false.obs;
 
   @override
   void onInit() {
@@ -57,37 +57,6 @@ class BaseSqfEntityController<T extends TableBase> extends GetxController {
   }
 }
 
-// Implementation od
-class CategoryController extends BaseSqfEntityController<Category> {
-  RxBool isSelected = false.obs;
-  RxList selectedID = [].obs;
-
-  @override
-  Future<void> fetchModels() async {
-    var dataList = await Category().select().toList();
-    models.value = dataList.toList();
-    resetSelected();
-    return super.fetchModels();
-  }
-
-  Future<void> deleteById(int id) async {
-    await Category().select().id.equals(id).delete();
-    await fetchModels();
-  }
-
-  void resetSelected() {
-    isSelected.value = false;
-    selectedID.value = [];
-  }
-
-  Future<void> deleteBulkByID(List modelsToDelete) async {
-    for (final model in modelsToDelete) {
-      await deleteById(model);
-    }
-    await fetchModels();
-  }
-}
-
 // ProductController
 class ProductController extends BaseSqfEntityController<Product> {
   RxBool isSelected = false.obs;
@@ -102,8 +71,11 @@ class ProductController extends BaseSqfEntityController<Product> {
 
   @override
   Future<void> fetchModels() async {
-    models.value = await Product().select().toList();
+    isLoading.value = true;
+    models.value = await Product().select().toList(preload: true);
     resetSelected();
+    isLoading.value = false;
+
     return super.fetchModels();
   }
 
@@ -139,43 +111,15 @@ class PaymentMethodController extends BaseSqfEntityController<PaymentMethod> {
 
   @override
   Future<void> fetchModels() async {
+    isLoading.value = true;
     models.value = await PaymentMethod().select().toList();
     resetSelected();
+    isLoading.value = false;
     return super.fetchModels();
   }
 
   Future<void> deleteById(int id) async {
     await PaymentMethod().select().id.equals(id).delete();
-    await fetchModels();
-  }
-
-  void resetSelected() {
-    isSelected.value = false;
-    selectedID.value = [];
-  }
-
-  Future<void> deleteBulkByID(List modelsToDelete) async {
-    for (final model in modelsToDelete) {
-      await deleteById(model);
-    }
-    await fetchModels();
-  }
-}
-
-// LeadController
-class LeadController extends BaseSqfEntityController<Lead> {
-  RxBool isSelected = false.obs;
-  RxList selectedID = [].obs;
-
-  @override
-  Future<void> fetchModels() async {
-    models.value = await Lead().select().toList();
-    resetSelected();
-    return super.fetchModels();
-  }
-
-  Future<void> deleteById(int id) async {
-    await Lead().select().id.equals(id).delete();
     await fetchModels();
   }
 
@@ -199,8 +143,10 @@ class SupplierController extends BaseSqfEntityController<Supplier> {
 
   @override
   Future<void> fetchModels() async {
+    isLoading.value = true;
     models.value = await Supplier().select().toList();
     resetSelected();
+    isLoading.value = false;
     return super.fetchModels();
   }
 
@@ -229,8 +175,10 @@ class PaymentDetailController extends BaseSqfEntityController<PaymentDetail> {
 
   @override
   Future<void> fetchModels() async {
+    isLoading.value = true;
     models.value = await PaymentDetail().select().toList();
     resetSelected();
+    isLoading.value = false;
     return super.fetchModels();
   }
 
@@ -259,8 +207,10 @@ class OrderController extends BaseSqfEntityController<Order> {
 
   @override
   Future<void> fetchModels() async {
+    isLoading.value = true;
     models.value = await Order().select().toList(preload: true);
     resetSelected();
+    isLoading.value = false;
     return super.fetchModels();
   }
 
@@ -281,11 +231,13 @@ class OrderController extends BaseSqfEntityController<Order> {
   }
 
   Future<void> onItemSelectedSave(int sale) async {
+    isLoading.value = true;
     for (final model in selectedItems) {
       model.salesId = sale;
       await model.save();
     }
     await fetchModels();
+    isLoading.value = false;
   }
 
   void resetSelected() {
@@ -308,8 +260,11 @@ class InvoiceController extends BaseSqfEntityController<Invoice> {
 
   @override
   Future<void> fetchModels() async {
+    isLoading.value = true;
+
     models.value = await Invoice().select().toList(preload: true);
     resetSelected();
+    isLoading.value = false;
     return super.fetchModels();
   }
 
@@ -318,7 +273,11 @@ class InvoiceController extends BaseSqfEntityController<Invoice> {
   }
 
   Future<Invoice?> getBySaleId(int id) async {
-    return await Invoice().select().salesId.equals(id).toSingle(preload: true);
+    isLoading.value = true;
+    Invoice? invoice =
+        await Invoice().select().salesId.equals(id).toSingle(preload: true);
+    isLoading.value = false;
+    return invoice;
   }
 
   Future<void> deleteById(int id) async {
@@ -346,8 +305,12 @@ class PaymentController extends BaseSqfEntityController<Payment> {
 
   @override
   Future<void> fetchModels() async {
+    isLoading.value = true;
+
     models.value = await Payment().select().toList();
     resetSelected();
+    isLoading.value = false;
+
     return super.fetchModels();
   }
 
@@ -376,6 +339,8 @@ class ExpenseController extends BaseSqfEntityController<Expense> {
   RxList<Expense> expenseByDate = <Expense>[].obs;
 
   Future<void> fetchByDate(DateTime date) async {
+    isLoading.value = true;
+
     var res = await Expense().select().toList(preload: true);
     List<Expense> filtered = [];
     for (Expense expense in res) {
@@ -384,12 +349,17 @@ class ExpenseController extends BaseSqfEntityController<Expense> {
       }
       expenseByDate.value = filtered;
     }
+    isLoading.value = false;
   }
 
   @override
   Future<void> fetchModels() async {
+    isLoading.value = true;
+
     models.value = await Expense().select().toList();
     resetSelected();
+    isLoading.value = true;
+
     return super.fetchModels();
   }
 
@@ -418,6 +388,7 @@ class SaleController extends BaseSqfEntityController<Sale> {
   RxList<Sale> salesByDate = <Sale>[].obs;
 
   Future<void> fetchByDate(DateTime date) async {
+    isLoading.value = true;
     var res = await Sale().select().toList(preload: true);
     List<Sale> filtered = [];
     for (Sale sale in res) {
@@ -426,47 +397,20 @@ class SaleController extends BaseSqfEntityController<Sale> {
       }
       salesByDate.value = filtered;
     }
+    isLoading.value = false;
   }
 
   @override
   Future<void> fetchModels() async {
+            isLoading.value = true;
     models.value = await Sale().select().toList(preload: true);
     resetSelected();
+            isLoading.value = false;
     return super.fetchModels();
   }
 
   Future<void> deleteById(int id) async {
     await Sale().select().id.equals(id).delete();
-    await fetchModels();
-  }
-
-  void resetSelected() {
-    isSelected.value = false;
-    selectedID.value = [];
-  }
-
-  Future<void> deleteBulkByID(List modelsToDelete) async {
-    for (final model in modelsToDelete) {
-      await deleteById(model);
-    }
-    await fetchModels();
-  }
-}
-
-// PeriodController
-class PeriodController extends BaseSqfEntityController<Period> {
-  RxBool isSelected = false.obs;
-  RxList selectedID = [].obs;
-
-  @override
-  Future<void> fetchModels() async {
-    models.value = await Period().select().toList();
-    resetSelected();
-    return super.fetchModels();
-  }
-
-  Future<void> deleteById(int id) async {
-    await Period().select().id.equals(id).delete();
     await fetchModels();
   }
 
@@ -514,37 +458,8 @@ class ProfitAndLossController extends BaseSqfEntityController<ProfitAndLoss> {
 }
 // Users contriller
 
-class UserController extends BaseSqfEntityController<User> {
-  RxBool isSelected = false.obs;
-  RxList selectedID = [].obs;
-
-  @override
-  Future<void> fetchModels() async {
-    models.value = await User().select().toList();
-    resetSelected();
-    return super.fetchModels();
-  }
-
-  Future<void> deleteById(int id) async {
-    await Period().select().id.equals(id).delete();
-    await fetchModels();
-  }
-
-  void resetSelected() {
-    isSelected.value = false;
-    selectedID.value = [];
-  }
-
-  Future<void> deleteBulkByID(List modelsToDelete) async {
-    for (final model in modelsToDelete) {
-      await deleteById(model);
-    }
-    await fetchModels();
-  }
-}
-
 class UtilityController extends GetxController {
- final box = GetStorage();
+  final box = GetStorage();
   String get getAdminPass => box.read('adminpass') ?? "1234";
   void setAdminPass(String val) => box.write('adminpass', val);
 

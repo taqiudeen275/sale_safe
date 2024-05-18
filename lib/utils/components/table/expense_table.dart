@@ -1,3 +1,4 @@
+import 'package:fluent_ui/fluent_ui.dart' as fluent_ui;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
@@ -13,7 +14,7 @@ class ExpenseTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16.0),
-      child: Obx(() => Table(
+      child: Obx(() => expenseController.isLoading.value ? const fluent_ui.ProgressRing(): Table(
         border: TableBorder.all(color: Colors.grey),
         columnWidths: const {
           0: FixedColumnWidth(150.0), // Name

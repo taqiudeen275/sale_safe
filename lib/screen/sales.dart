@@ -236,21 +236,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                                 },
                                           ),
                                         ),
-                                        CommandBarBuilderItem(
-                                          builder: (context, mode, w) =>
-                                              Tooltip(
-                                            message:
-                                                "Record Payment of Credit Sale",
-                                            child: w,
-                                          ),
-                                          wrappedItem: CommandBarButton(
-                                            icon: const Icon(
-                                                FluentIcons.payment_card),
-                                            label: const Text('Make Payment'),
-                                            onPressed:
-                                                !sale.isCredit! ? null : () {},
-                                          ),
-                                        ),
+                                     
                                       ],
                                     ),
                                     const SizedBox(

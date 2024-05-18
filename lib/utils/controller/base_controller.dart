@@ -69,6 +69,16 @@ class ProductController extends BaseSqfEntityController<Product> {
     return [];
   }
 
+  List<Product> getLowProductQuantity() {
+    RxList<Product> lowProducts = <Product>[].obs;
+    for (Product item in models) {
+      if (item.quantity! < 20) {
+        lowProducts.add(item);
+      }
+    }
+    return lowProducts;
+  }
+
   @override
   Future<void> fetchModels() async {
     isLoading.value = true;
@@ -402,10 +412,10 @@ class SaleController extends BaseSqfEntityController<Sale> {
 
   @override
   Future<void> fetchModels() async {
-            isLoading.value = true;
+    isLoading.value = true;
     models.value = await Sale().select().toList(preload: true);
     resetSelected();
-            isLoading.value = false;
+    isLoading.value = false;
     return super.fetchModels();
   }
 
@@ -460,8 +470,17 @@ class ProfitAndLossController extends BaseSqfEntityController<ProfitAndLoss> {
 
 class UtilityController extends GetxController {
   final box = GetStorage();
+  RxBool isAuthenticated = false.obs;
   String get getAdminPass => box.read('adminpass') ?? "1234";
   void setAdminPass(String val) => box.write('adminpass', val);
+  bool authenticate(String pass) {
+    if (getAdminPass == pass) {
+      isAuthenticated.value = true;
+      return isAuthenticated.value;
+    } else {
+      return false;
+    }
+  }
 
   @override
   void onInit() {

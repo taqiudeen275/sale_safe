@@ -53,61 +53,76 @@ class _ProductFormState extends State<ProductAdd> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Product Name
-            TextFormBox(
-              controller: _nameController,
-              placeholder: 'Enter product name',
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter product name';
-                }
-                return null;
-              },
+            InfoLabel(
+              label: "Product Name",
+              child: TextFormBox(
+                controller: _nameController,
+                placeholder: 'Enter product name',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter product name';
+                  }
+                  return null;
+                },
+              ),
             ),
             const SizedBox(height: 16.0),
             // Product Description
-            TextBox(
-              controller: _descriptionController,
-              placeholder: 'Enter product description (optional)',
-              maxLines: 3,
+            InfoLabel(
+              label: "Description",
+              child: TextBox(
+                controller: _descriptionController,
+                placeholder: 'Enter product description (optional)',
+                maxLines: 3,
+              ),
             ),
             const SizedBox(height: 16.0),
             // Product Cost
-            TextFormBox(
-              controller: _costController,
-              placeholder: 'Enter product cost',
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter product cost';
-                }
-                return null;
-              },
+            InfoLabel(
+              label: "Cost",
+              child: TextFormBox(
+                controller: _costController,
+                placeholder: 'Enter product cost',
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter product cost';
+                  }
+                  return null;
+                },
+              ),
             ),
             const SizedBox(height: 16.0),
             // Product Price
-            TextFormBox(
-              controller: _priceController,
-              placeholder: 'Enter product price',
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter product price';
-                }
-                return null;
-              },
+            InfoLabel(
+              label: "Price",
+              child: TextFormBox(
+                controller: _priceController,
+                placeholder: 'Enter product price',
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter product price';
+                  }
+                  return null;
+                },
+              ),
             ),
             const SizedBox(height: 16.0),
             // Product Quantity
-            TextFormBox(
-              controller: _quantityController,
-              placeholder: 'Enter product quantity',
-              keyboardType: TextInputType.number,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter product quantity';
-                }
-                return null;
-              },
+            InfoLabel(
+              label: "Quantity",
+              child: TextFormBox(
+                controller: _quantityController,
+                placeholder: 'Enter product quantity',
+                keyboardType: TextInputType.number,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter product quantity';
+                  }
+                  return null;
+                },
+              ),
             ),
             const SizedBox(height: 16.0),
             // Submit Button
@@ -147,6 +162,10 @@ class _ProductFormState extends State<ProductAdd> {
               date: DateTime.now(),
               previousQuantity: widget.product!.quantity.toString(),
               currentQuantity: quantity.toString(),
+              currentCost: cost.toString(),
+              currentCurrent: price.toString(),
+              previousCost: widget.product!.cost.toString(),
+              previousPrice: widget.product!.price.toString(),
               name: widget.product!.name)
           .save();
     } else {
@@ -164,6 +183,10 @@ class _ProductFormState extends State<ProductAdd> {
               date: DateTime.now(),
               previousQuantity: quantity.toString(),
               currentQuantity: quantity.toString(),
+              currentCost: cost.toString(),
+              currentCurrent: price.toString(),
+              previousCost: cost.toString(),
+              previousPrice: price.toString(),
               name: name)
           .save();
       productController.fetchModels();

@@ -1,4 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 
 class PasswordUpdate extends StatefulWidget {
@@ -46,9 +48,7 @@ class _PasswordUpdateState extends State<PasswordUpdate> {
               );
             },
           );
-        }else{
-
-        }
+        } else {}
       }
 
       // Clear the text fields after successful update
@@ -60,44 +60,54 @@ class _PasswordUpdateState extends State<PasswordUpdate> {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      
-      key: _formKey,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormBox(
-              controller: _currentPasswordController,
-              obscureText: true,
-              placeholder: 'Enter your current password',
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your current password';
-                }
-                return null;
-              },
+    return Container(
+      padding: EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text("Update Admin Password",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          SizedBox(height: 15),
+          Form(
+            key: _formKey,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextFormBox(
+                    controller: _currentPasswordController,
+                    obscureText: true,
+                    placeholder: 'Enter your current password',
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your current password';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextFormBox(
+                    controller: _newPasswordController,
+                    obscureText: true,
+                    placeholder: 'Enter your new password',
+                  ),
+                  const SizedBox(height: 16.0),
+                  TextFormBox(
+                    placeholder: 'Confirm New Password',
+                    controller: _confirmPasswordController,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 24.0),
+                  Button(
+                    onPressed: _updatePassword,
+                    child: const Text('Update Password'),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 16.0),
-            TextFormBox(
-              controller: _newPasswordController,
-              obscureText: true,
-              placeholder: 'Enter your new password',
-            ),
-            const SizedBox(height: 16.0),
-            TextFormBox(
-              placeholder: 'Confirm New Password',
-              controller: _confirmPasswordController,
-              obscureText: true,
-            ),
-            const SizedBox(height: 24.0),
-            Button(
-              onPressed: _updatePassword,
-              child: const Text('Update Password'),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -108,5 +118,76 @@ class _PasswordUpdateState extends State<PasswordUpdate> {
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+}
+
+class PassWordChecker extends StatefulWidget {
+  const PassWordChecker({super.key});
+
+  @override
+  State<PassWordChecker> createState() => _PassWordCheckerState();
+}
+
+class _PassWordCheckerState extends State<PassWordChecker> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  UtilityController utilityController = Get.put(UtilityController());
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextFormBox(
+            obscureText: true,
+            placeholder: 'Enter your Admin Password to access this page',
+            controller: _nameController,
+          ),
+          const SizedBox(height: 8.0),
+          const SizedBox(height: 16.0),
+          // Submit Button
+          FilledButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                bool isTrue =
+                    utilityController.authenticate(_nameController.text);
+                      Navigator.pop(context);
+                    
+                if (!isTrue) {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return ContentDialog(
+                        title: const Text('Wrong Password'),
+                        content:
+                            const Text('Please enter a correct Password.'),
+                        actions: [
+                          Button(
+                            child: const Text('OK'),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
+              }
+            },
+            child: const Text('Login'),
+          )
+        ],
+      ),
+    );
   }
 }

@@ -2,10 +2,13 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:sale_safe/screen/expense.dart';
+import 'package:sale_safe/screen/home.dart';
 import 'package:sale_safe/screen/inventory.dart';
 import 'package:sale_safe/screen/sales.dart';
 import 'package:sale_safe/screen/setting.dart';
 import 'package:sale_safe/screen/suppliers.dart';
+import 'package:sale_safe/utils/components/aboutWidget.dart';
+import 'package:sale_safe/utils/components/modal.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -19,7 +22,7 @@ class _MainPageState extends State<MainPage> {
     PaneItem(
       icon: const Icon(Iconsax.home),
       title: const Text('Home'),
-      body: const Placeholder(),
+      body: const HomeScreen(),
     ),
     PaneItemSeparator(),
     PaneItem(
@@ -60,7 +63,12 @@ class _MainPageState extends State<MainPage> {
             icon: const Icon(FluentIcons.info),
             title: const Text('About'),
             onTap: () {
-             
+              bigActionModal(
+                context,
+                    const Text('About'),
+              const AboutWidget(),
+              [Button(child: const Text("Close"), onPressed: () =>Navigator.pop(context))] 
+              );
             },
           ),
         ],

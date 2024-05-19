@@ -115,6 +115,7 @@ class _AddExpenseState extends State<AddExpense> {
         );
         _expenseController.addModel(expense);
      
+     await  _expenseController.fetchModels();
      await  _expenseController.fetchByDate(DateTime.now());
       // Clear form fields
       _clearFields();

@@ -1,10 +1,11 @@
-
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:sale_safe/data/forms/product_form.dart';
+import 'package:sale_safe/model/model.dart';
 import 'package:sale_safe/utils/components/modal.dart';
 import 'package:sale_safe/utils/components/password_update.dart';
+import 'package:sale_safe/utils/components/table/product_record_table.dart';
 import 'package:sale_safe/utils/components/table/product_table.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 
@@ -33,6 +34,10 @@ class _ProductScreenState extends State<ProductScreen> {
     _productSearchController.dispose();
     productController.searchQuery.value = "";
     super.dispose();
+  }
+
+  Future<Product?> getById(int id) async {
+    return await Product().getById(id);
   }
 
   @override
@@ -196,6 +201,60 @@ class _ProductScreenState extends State<ProductScreen> {
                                     TableCell(
                                       child: Row(
                                         children: [
+                                          IconButton(
+                                              onPressed: () async {
+                                              
+                                                List<ProductRecord>
+                                                    productRecord =
+                                                    await ProductRecord()
+                                                        .select()
+                                                        .productId
+                                                        .equals(product.id)
+                                                        .toList();
+                                                // ignore: use_build_context_synchronously
+                                                bigActionModal(
+                                                  context,
+                                                  const Text("Product Details"),
+                                                  SizedBox(
+                                                    height:
+                                                        MediaQuery.of(context)
+                                                            .size
+                                                            .height,
+                                                    child:
+                                                        SingleChildScrollView(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          if (productRecord
+                                                              .isNotEmpty)
+                                                            ProductRecordTable(
+                                                                records:
+                                                                    productRecord),
+                                                          if (productRecord
+                                                              .isEmpty)
+                                                            const Text(
+                                                                "No Product records")
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  [
+                                                    FilledButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(
+                                                                context),
+                                                        child:
+                                                            const Text("Close"))
+                                                  ],
+                                                );
+                                              },
+                                              icon:
+                                                  const Icon(FluentIcons.view)),
+                                          const SizedBox(
+                                            width: 10,
+                                          ),
                                           IconButton(
                                               onPressed: () async {
                                                 actionModal(

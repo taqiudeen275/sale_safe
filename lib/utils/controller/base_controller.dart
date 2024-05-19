@@ -482,8 +482,4 @@ class UtilityController extends GetxController {
     }
   }
 
-  @override
-  void onInit() {
-    super.onInit();
-  }
 }

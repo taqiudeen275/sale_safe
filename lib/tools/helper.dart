@@ -1,3 +1,5 @@
+// ignore_for_file: depend_on_referenced_packages, avoid_unnecessary_containers, constant_identifier_names
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart'
@@ -70,7 +72,7 @@ class UITools {
         backgroundColor: mainBgColorLighter,
         elevation: 1,
         centerTitle: false,
-        title: Text(''),
+        title: const Text(''),
         actions: actions,
         automaticallyImplyLeading: false,
       ),
@@ -78,14 +80,14 @@ class UITools {
   }
 
   Widget makeBottomAlert(String text) {
-    return Container(
+    return SizedBox(
       height: scaleHeight(70),
       child: BottomAppBar(
         color: UITools.mainAlertColor,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            Icon(
+            const Icon(
               Icons.info,
               color: Colors.white,
               size: 50,
@@ -122,15 +124,15 @@ class UITools {
 
   Card makeCard(StatefulWidget modelPage, String title) => Card(
         elevation: 2.0,
-        margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
+        margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 6.0),
         child: Container(
-            decoration: BoxDecoration(color: mainItemBgColor),
+            decoration: const BoxDecoration(color: mainItemBgColor),
             child: ListTile(
               contentPadding:
-                  EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
               leading: Container(
-                padding: EdgeInsets.only(right: 12.0),
-                decoration: BoxDecoration(
+                padding: const EdgeInsets.only(right: 12.0),
+                decoration: const BoxDecoration(
                     border: Border(
                         right: BorderSide(width: 1.0, color: Colors.white24))),
                 child: SizedBox(
@@ -260,7 +262,7 @@ class UITools {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
+                  const CircularProgressIndicator(),
                   SizedBox(
                     width: scaleWidth(20),
                   ),
@@ -311,7 +313,7 @@ class UITools {
   static Container imageFromNetwork(String? imgUrl) {
     if (imgUrl == null || imgUrl.isEmpty) {
       return Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
               image: DecorationImage(
         image: AssetImage('no-picture.png'),
         fit: BoxFit.cover,
@@ -324,7 +326,7 @@ class UITools {
   static Container imageFromCache(String? imgUrl) {
     if (imgUrl == null || imgUrl.isEmpty) {
       return Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
               image: DecorationImage(
         image: AssetImage('no-picture.png'),
         fit: BoxFit.cover,
@@ -342,7 +344,7 @@ class UITools {
   static Container imageFromCacheProvider(String? imgUrl) {
     if (imgUrl == null || imgUrl.isEmpty) {
       return Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
               image: DecorationImage(
         image: AssetImage('no-picture.png'),
         fit: BoxFit.cover,
@@ -368,7 +370,7 @@ class UITools {
             actions: <Widget>[
               // usually buttons at the bottom of the dialog
               TextButton(
-                child: Text('Close'),
+                child: const Text('Close'),
                 onPressed: () {
                   Navigator.of(context).pop();
                   if (callBack != null) {

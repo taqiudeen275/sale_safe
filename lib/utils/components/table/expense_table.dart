@@ -88,7 +88,7 @@ class ExpenseTable extends StatelessWidget {
                 TableCell(
                   child: Padding(
                     padding: const EdgeInsets.all(8.0),
-                    child: Text('\GH¢ ${expense.amount!.toStringAsFixed(2)}'),
+                    child: Text('GH¢ ${expense.amount!.toStringAsFixed(2)}'),
                   ),
                 ),
                 TableCell(

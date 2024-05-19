@@ -1,12 +1,12 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:get/get.dart';
-import 'package:sale_safe/data/forms/expenseForm.dart';
-import 'package:sale_safe/data/forms/productForm.dart';
-import 'package:sale_safe/data/forms/suppliersForm.dart';
+import 'package:sale_safe/data/forms/expense_form.dart';
+import 'package:sale_safe/data/forms/product_form.dart';
+import 'package:sale_safe/data/forms/suppliers_form.dart';
 import 'package:sale_safe/model/model.dart';
 import 'package:sale_safe/utils/components/modal.dart';
-import 'package:sale_safe/utils/components/orderPick.dart';
-import 'package:sale_safe/utils/components/passwordUpdare.dart';
+import 'package:sale_safe/utils/components/order_pick.dart';
+import 'package:sale_safe/utils/components/password_update.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,19 +27,25 @@ class _HomeScreenState extends State<HomeScreen> {
   final OrderController orderController = Get.put(OrderController());
   RxBool isCredit = false.obs;
   DateTime? selectedDate;
+  RxDouble revenue = 0.0.obs;
+  
   @override
   void initState() {
     salesController.fetchByDate(DateTime.now());
     expenseController.fetchByDate(DateTime.now());
-    // TODO: implement initState
+  
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+        revenue.value = salesController.salesByDate.fold(
+            0.0, (previousValue, element) => previousValue + element.amount!) -
+        expenseController.expenseByDate.fold(
+            0.0, (previousValue, element) => previousValue + element.amount!);
       if (productController.isLoading.value) {
-        return const Expanded(child: Center(child: const ProgressRing()));
+        return const Expanded(child: Center(child: ProgressRing()));
       } else {
         return SingleChildScrollView(
           child: Padding(
@@ -72,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             label: const Text('Record Sale'),
                             onPressed: () {
                               bigActionModal(context, const Text("Add Sale"),
-                                  OrderPick(), [
+                                  const OrderPick(), [
                                 FilledButton(
                                     child: const Text("Cancel"),
                                     onPressed: () {
@@ -80,24 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     }),
                                 Obx(() => Row(
                                       children: [
-                                        const Text("Credit Sale"),
-                                        const SizedBox(
-                                          width: 10,
-                                        ),
-                                        ToggleSwitch(
-                                          checked: isCredit.value,
-                                          onChanged: productController
-                                                  .selectedItems.isEmpty
-                                              ? null
-                                              : (bool value) {
-                                                  isCredit.value = value;
-                                                },
-                                        ),
-                                        const SizedBox(
-                                          width: 20,
-                                        ),
+                                        
                                         Expanded(
-                                          child: FilledButton(
+                                          child: Button(
                                               onPressed: productController
                                                       .selectedItems.isEmpty
                                                   ? null
@@ -151,8 +142,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Expanded(
                         child: Card(
-                          padding: EdgeInsets.all(20),
-                          margin: EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(20),
+                          margin: const EdgeInsets.all(10),
                           borderRadius: BorderRadius.circular(20),
                           child: Column(children: [
                             const Text(
@@ -170,8 +161,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Card(
-                        padding: EdgeInsets.all(20),
-                        margin: EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(20),
+                        margin: const EdgeInsets.all(10),
                         borderRadius: BorderRadius.circular(20),
                         child: Column(children: [
                           const Text(
@@ -189,8 +180,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       Expanded(
                         child: Card(
-                          padding: EdgeInsets.all(20),
-                          margin: EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(20),
+                          margin: const EdgeInsets.all(10),
                           borderRadius: BorderRadius.circular(20),
                           child: Column(children: [
                             const Text(
@@ -208,8 +199,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       Card(
-                        padding: EdgeInsets.all(20),
-                        margin: EdgeInsets.all(10),
+                        padding: const EdgeInsets.all(20),
+                        margin: const EdgeInsets.all(10),
                         borderRadius: BorderRadius.circular(20),
                         child: Column(children: [
                           const Text(
@@ -231,8 +222,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Expanded(
                         child: Card(
-                          padding: EdgeInsets.all(20),
-                          margin: EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(20),
+                          margin: const EdgeInsets.all(10),
                           borderRadius: BorderRadius.circular(20),
                           child: Column(children: [
                             const Text(
@@ -240,7 +231,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(fontSize: 24),
                             ),
                             Text(
-                              "GH¢  ${salesController.salesByDate.fold(0.0, (previousValue, element) => previousValue + element.amount!)}",
+                              "GH¢  ${salesController.salesByDate.fold(0.0, (previousValue, element) => previousValue + element.amount!).toStringAsFixed(2)}",
                               style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w900,
@@ -251,8 +242,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       Expanded(
                         child: Card(
-                          padding: EdgeInsets.all(20),
-                          margin: EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(20),
+                          margin: const EdgeInsets.all(10),
                           borderRadius: BorderRadius.circular(20),
                           child: Column(children: [
                             const Text(
@@ -271,8 +262,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       Expanded(
                         child: Card(
-                          padding: EdgeInsets.all(20),
-                          margin: EdgeInsets.all(10),
+                          padding: const EdgeInsets.all(20),
+                          margin: const EdgeInsets.all(10),
                           borderRadius: BorderRadius.circular(20),
                           child: Column(children: [
                             const Text(
@@ -280,11 +271,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(fontSize: 24),
                             ),
                             Text(
-                              "GH¢  ${(salesController.salesByDate.fold(0.0, (previousValue, element) => previousValue + element.amount!) - expenseController.expenseByDate.fold(0.0, (previousValue, element) => previousValue + element.amount!)).toStringAsFixed(2)}",
-                              style: const TextStyle(
+                              "GH¢  ${revenue.value.toStringAsFixed(2)}",
+                              style:  TextStyle(
                                   fontSize: 45,
                                   fontWeight: FontWeight.w900,
-                                  color: Colors.successPrimaryColor),
+                                  color:revenue.value.isNegative? Colors.red :Colors.successPrimaryColor),
                             )
                           ]),
                         ),
@@ -296,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                           "${productController.getLowProductQuantity().length} Products Running Low in Stock",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 30,
                           )),
                       ...productController
@@ -311,8 +302,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   style: TextStyle(color: Colors.red),
                                 ),
                                 trailing: IconButton(
-                                    icon: utilController
-                                          .isAuthenticated.value? const Icon(FluentIcons.edit): const Icon(FluentIcons.lock),
+                                    icon: utilController.isAuthenticated.value
+                                        ? const Icon(FluentIcons.edit)
+                                        : const Icon(FluentIcons.lock),
                                     onPressed: () {
                                       if (utilController
                                           .isAuthenticated.value) {

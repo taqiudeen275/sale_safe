@@ -1,8 +1,10 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'helper.dart';
 
 class SlideMenu extends StatefulWidget {
-  SlideMenu({this.child, this.menuItems});
+  const SlideMenu({super.key, this.child, this.menuItems});
   final Widget? child;
   final List<Widget>? menuItems;
   @override

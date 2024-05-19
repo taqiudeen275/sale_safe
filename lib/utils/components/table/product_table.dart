@@ -2,7 +2,7 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter/material.dart' as material_ui;
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:sale_safe/data/forms/productForm.dart'; // Replace with your product form path
+import 'package:sale_safe/data/forms/product_form.dart'; // Replace with your product form path
 import 'package:sale_safe/utils/components/modal.dart';
 import 'package:sale_safe/utils/components/table/table.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
@@ -115,7 +115,7 @@ class _ProductTableViewState extends State<ProductTableView> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Text('No Product available'),
-              SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               material_ui.FilledButton.tonal(

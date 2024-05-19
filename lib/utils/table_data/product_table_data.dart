@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:sale_safe/data/forms/productForm.dart';
+import 'package:sale_safe/data/forms/product_form.dart';
 import 'package:sale_safe/model/model.dart';
 import 'package:sale_safe/utils/base_table.dart';
 import 'package:sale_safe/utils/components/modal.dart';
-import 'package:sale_safe/utils/components/table/productRecordTable.dart';
+import 'package:sale_safe/utils/components/table/product_record_table.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 import 'package:sqfentity_gen/sqfentity_gen.dart';
+import 'package:fluent_ui/fluent_ui.dart';
 
 class ProductsDataData extends SqfEntityDBTableDataSource {
   ProductController productController = Get.put(ProductController());
@@ -54,11 +54,13 @@ class ProductsDataData extends SqfEntityDBTableDataSource {
         FilledButton(
           onPressed: () async {
             await productController.deleteModel(itemToDelete);
+            Get.back();
+            // ignore: use_build_context_synchronously
             Navigator.pop(context);
           },
           child: const Text("Yes"),
         ),
-        OutlinedButton(
+        Button(
           onPressed: () {
             Navigator.pop(context);
           },
@@ -75,8 +77,10 @@ class ProductsDataData extends SqfEntityDBTableDataSource {
       context,
       const Text("Update Product"),
       ProductAdd(product: await getById(index)),
-      [FilledButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))],
-      
+      [
+        Button(
+            onPressed: () => Navigator.pop(context), child: const Text("Close"))
+      ],
     );
     super.onEditPressed(index, context);
   }
@@ -91,8 +95,7 @@ class ProductsDataData extends SqfEntityDBTableDataSource {
       const Text("Product Details"),
       SingleChildScrollView(
         child: Column(
-           crossAxisAlignment: CrossAxisAlignment.start,
-
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (productRecord.isNotEmpty)
               ProductRecordTable(records: productRecord),
@@ -100,8 +103,10 @@ class ProductsDataData extends SqfEntityDBTableDataSource {
           ],
         ),
       ),
-      [FilledButton(onPressed: () => Navigator.pop(context), child: const Text("Close"))],
-      
+      [
+        FilledButton(
+            onPressed: () => Navigator.pop(context), child: const Text("Close"))
+      ],
     );
     super.onEditPressed(index, context);
   }

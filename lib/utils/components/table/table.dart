@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../modal.dart';
+import 'package:fluent_ui/fluent_ui.dart' as fluent_ui;
+
 
 class SqfEntityDBTable extends StatefulWidget {
   const SqfEntityDBTable(
@@ -12,6 +14,7 @@ class SqfEntityDBTable extends StatefulWidget {
       this.headerSize = 26,
       required this.addTitle,
       required this.addContent,
+      // ignore: non_constant_identifier_names
       this.extra_action});
 
   final List<DataColumn> columns;
@@ -22,6 +25,7 @@ class SqfEntityDBTable extends StatefulWidget {
   final Widget addTitle;
   final double headerSize;
   final Widget addContent;
+  // ignore: non_constant_identifier_names
   final List<Widget>? extra_action;
   @override
   State<SqfEntityDBTable> createState() => _SqfEntityDBTableState();
@@ -44,7 +48,7 @@ class _SqfEntityDBTableState extends State<SqfEntityDBTable> {
                           widget.addTitle,
                           widget.addContent,
                           [
-                            FilledButton(
+                            fluent_ui.Button(
                                 onPressed: () => Navigator.pop(context),
                                 child: const Text("Close"))
                           ],

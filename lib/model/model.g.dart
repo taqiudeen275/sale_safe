@@ -1,5 +1,7 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
+// ignore_for_file: prefer_null_aware_operators, no_leading_underscores_for_local_identifiers
+
 part of 'model.dart';
 
 // **************************************************************************

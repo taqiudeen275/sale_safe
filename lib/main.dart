@@ -1,6 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:sale_safe/screen/mainPage.dart';
+import 'package:sale_safe/screen/main_page.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {

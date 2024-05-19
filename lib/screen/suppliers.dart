@@ -1,5 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:sale_safe/data/forms/suppliersForm.dart';
+import 'package:sale_safe/data/forms/suppliers_form.dart';
 import 'package:sale_safe/utils/components/table/supplier_table.dart';
 
 class SuppplierScreen extends StatelessWidget {

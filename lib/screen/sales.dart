@@ -1,23 +1,21 @@
-// import 'dart:io';
-
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:get/get.dart';
-// import 'package:path_provider/path_provider.dart';
-import 'package:sale_safe/data/forms/invoiceForm.dart';
+import 'package:sale_safe/data/forms/invoice_form.dart';
 import 'package:sale_safe/model/model.dart';
 import 'package:sale_safe/utils/components/invoice_widget.dart';
 import 'package:sale_safe/utils/components/modal.dart';
-import 'package:sale_safe/utils/components/orderPick.dart';
+import 'package:sale_safe/utils/components/order_pick.dart';
+import 'package:sale_safe/utils/components/printable_invoice.dart';
+import 'package:sale_safe/utils/components/printable_reciept.dart';
 import 'package:sale_safe/utils/components/reciept_widget.dart';
-// import 'package:sale_safe/utils/components/printableInvoice.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 import 'package:sale_safe/utils/utils.dart';
-// import 'package:pdf/pdf.dart';
-// import 'package:pdf/widgets.dart' as pw;
-// import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class SalesScreen extends StatefulWidget {
-  SalesScreen({super.key});
+  const SalesScreen({super.key});
 
   @override
   State<SalesScreen> createState() => _SalesScreenState();
@@ -35,7 +33,6 @@ class _SalesScreenState extends State<SalesScreen> {
   void initState() {
     salesController.fetchByDate(DateTime.now());
 
-    // TODO: implement initState
     super.initState();
   }
 
@@ -44,7 +41,7 @@ class _SalesScreenState extends State<SalesScreen> {
     return Obx(() => Column(
           children: [
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 40),
+              padding: const EdgeInsets.symmetric(horizontal: 40),
               height: MediaQuery.of(context).size.height * 0.2,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +54,7 @@ class _SalesScreenState extends State<SalesScreen> {
                       Row(
                         children: [
                           const Text("View Sales By Date: "),
-                          SizedBox(width: 10),
+                          const SizedBox(width: 10),
                           DatePicker(
                             selected: selectedDate,
                             onChanged: (time) => setState(() {
@@ -66,14 +63,14 @@ class _SalesScreenState extends State<SalesScreen> {
                             }),
                           ),
                           const SizedBox(width: 10),
-                      FilledButton(
-                          child: Text("Today"),
-                          onPressed: () {
-                            setState(() {
-                              selectedDate = DateTime.now();
-                              salesController.fetchByDate(selectedDate!);
-                            });
-                          })
+                          FilledButton(
+                              child: const Text("Today"),
+                              onPressed: () {
+                                setState(() {
+                                  selectedDate = DateTime.now();
+                                  salesController.fetchByDate(selectedDate!);
+                                });
+                              })
                         ],
                       ),
                       RecordSale(
@@ -146,11 +143,41 @@ class _SalesScreenState extends State<SalesScreen> {
                                                                 .plOrders!)),
                                                     [
                                                       FilledButton(
-                                                          child: const Text(
-                                                              "Print"),
-                                                          onPressed: () async {
-                                                            
-                                                          }),
+                                                        child:
+                                                            const Text("Print"),
+                                                        onPressed: () async {
+                                                          final doc =
+                                                              pw.Document();
+
+                                                          doc.addPage(
+                                                            pw.Page(
+                                                              pageFormat:
+                                                                  PdfPageFormat
+                                                                      .a4,
+                                                              build: (pw.Context
+                                                                  context) {
+                                                                return buildInvoicePdf(
+                                                                    invoiceNumber: invoice
+                                                                        .invoice_number
+                                                                        .toString(),
+                                                                    invoiceDate:
+                                                                        invoice
+                                                                            .date!,
+                                                                    to: invoice
+                                                                        .customer_name!,
+                                                                    invoiceItems:
+                                                                        sale.plOrders!);
+                                                              },
+                                                            ),
+                                                          );
+
+                                                          await Printing.sharePdf(
+                                                              bytes: await doc
+                                                                  .save(),
+                                                              filename:
+                                                                  '${invoice.invoice_number}_invoice.pdf');
+                                                        },
+                                                      ),
                                                       Button(
                                                           child: const Text(
                                                               "Close"),
@@ -183,7 +210,15 @@ class _SalesScreenState extends State<SalesScreen> {
                                                     InvoiceAdd(
                                                       sale: sale,
                                                     ),
-                                                    []);
+                                                    [
+                                                      Button(
+                                                          child: const Text(
+                                                              "Close"),
+                                                          onPressed: () {
+                                                            Navigator.pop(
+                                                                context);
+                                                          })
+                                                    ]);
                                               },
                                             ),
                                           ),
@@ -197,46 +232,81 @@ class _SalesScreenState extends State<SalesScreen> {
                                           wrappedItem: CommandBarButton(
                                             icon: const Icon(FluentIcons.view),
                                             label: const Text('View Reciept'),
-                                            onPressed:
-                                                !sale.plInvoices!.any((element) =>
-                                            element.salesId == sale.id) ? null : () async {
-                                                   Invoice? invoice =
-                                                    await invoiceController
-                                                        .getBySaleId(sale.id!);
-                                                // ignore: use_build_context_synchronously
-                                                bigActionModal(
-                                                    context,
-                                                    const Text("Reciept"),
-                                                    SingleChildScrollView(
-                                                        child: ReceiptWidget(
-                                                            receiptNumber: invoice!
-                                                                .invoice_number
-                                                                .toString(),
-                                                            receiptDate:
-                                                                invoice.date!,
-                                                            to: invoice
-                                                                .customer_name!,
-                                                            receiptItems: sale
-                                                                .plOrders!)),
-                                                    [
-                                                      FilledButton(
-                                                          child: const Text(
-                                                              "Print"),
-                                                          onPressed: () async {
-                                                            
-                                                          }),
-                                                      Button(
-                                                          child: const Text(
-                                                              "Close"),
-                                                          onPressed: () {
-                                                            Navigator.pop(
-                                                                context);
-                                                          })
-                                                    ]);
-                                                },
+                                            onPressed: !sale.plInvoices!.any(
+                                                    (element) =>
+                                                        element.salesId ==
+                                                        sale.id)
+                                                ? null
+                                                : () async {
+                                                    Invoice? invoice =
+                                                        await invoiceController
+                                                            .getBySaleId(
+                                                                sale.id!);
+                                                    // ignore: use_build_context_synchronously
+                                                    bigActionModal(
+                                                        context,
+                                                        const Text("Reciept"),
+                                                        SingleChildScrollView(
+                                                            child: ReceiptWidget(
+                                                                receiptNumber: invoice!
+                                                                    .invoice_number
+                                                                    .toString(),
+                                                                receiptDate:
+                                                                    invoice
+                                                                        .date!,
+                                                                to: invoice
+                                                                    .customer_name!,
+                                                                receiptItems: sale
+                                                                    .plOrders!)),
+                                                        [
+                                                          FilledButton(
+                                                              child: const Text(
+                                                                  "Print"),
+                                                              onPressed:
+                                                                  () async {
+                                                                      final doc =
+                                                              pw.Document();
+
+                                                          doc.addPage(
+                                                            pw.Page(
+                                                              pageFormat:
+                                                                  PdfPageFormat
+                                                                      .a4,
+                                                              build: (pw.Context
+                                                                  context) {
+                                                                return buildRecieptPdf(
+                                                                    receiptNumber: invoice
+                                                                        .invoice_number
+                                                                        .toString(),
+                                                                    receiptDate:
+                                                                        invoice
+                                                                            .date!,
+                                                                    to: invoice
+                                                                        .customer_name!,
+                                                                    receiptItems:
+                                                                        sale.plOrders!);
+                                                              },
+                                                            ),
+                                                          );
+
+                                                          await Printing.sharePdf(
+                                                              bytes: await doc
+                                                                  .save(),
+                                                              filename:
+                                                                  '${invoice.invoice_number}_reciept.pdf');
+ 
+                                                                  }),
+                                                          Button(
+                                                              child: const Text(
+                                                                  "Close"),
+                                                              onPressed: () {
+                                                                Navigator.pop(
+                                                                    context);
+                                                              })
+                                                        ]);
+                                                  },
                                           ),
                                         ),
-                                     
                                       ],
                                     ),
                                     const SizedBox(
@@ -409,26 +479,14 @@ class RecordSale extends StatelessWidget {
   Widget build(BuildContext context) {
     return FilledButton(
         onPressed: () {
-          bigActionModal(context, const Text("Add Sale"), OrderPick(), [
-            FilledButton(
+          bigActionModal(context, const Text("Add Sale"), const OrderPick(), [
+            Button(
                 child: const Text("Cancel"),
                 onPressed: () {
                   Navigator.pop(context);
                 }),
             Obx(() => Row(
                   children: [
-                    const Text("Credit Sale"),
-                    const SizedBox(
-                      width: 10,
-                    ),
-                    ToggleSwitch(
-                      checked: isCredit.value,
-                      onChanged: productController.selectedItems.isEmpty
-                          ? null
-                          : (bool value) {
-                              isCredit.value = value;
-                            },
-                    ),
                     const SizedBox(
                       width: 20,
                     ),

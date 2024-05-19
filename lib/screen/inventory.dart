@@ -1,9 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:get/get.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:sale_safe/data/forms/productForm.dart';
+import 'package:sale_safe/data/forms/product_form.dart';
 import 'package:sale_safe/utils/components/modal.dart';
-import 'package:sale_safe/utils/components/passwordUpdare.dart';
+import 'package:sale_safe/utils/components/password_update.dart';
 import 'package:sale_safe/utils/components/table/product_table.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 
@@ -25,7 +27,6 @@ class _ProductScreenState extends State<ProductScreen> {
   void initState() {
     _productSearchController.text = "";
 
-    // TODO: implement initState
     super.initState();
   }
 
@@ -33,7 +34,6 @@ class _ProductScreenState extends State<ProductScreen> {
   void dispose() {
     _productSearchController.dispose();
     productController.searchQuery.value = "";
-    // TODO: implement dispose
     super.dispose();
   }
 
@@ -205,7 +205,12 @@ class _ProductScreenState extends State<ProductScreen> {
                                                   const Text("Update Product"),
                                                   ProductAdd(
                                                       product: (product)),
-                                                  [],
+                                                  [Button(
+                                                      onPressed: () {
+                                                        Navigator.pop(context);
+                                                      },
+                                                      child: const Text("No"),
+                                                    ),],
                                                 );
                                               },
                                               icon: const Icon(Iconsax.edit)),
@@ -229,7 +234,7 @@ class _ProductScreenState extends State<ProductScreen> {
                                                       },
                                                       child: const Text("Yes"),
                                                     ),
-                                                    OutlinedButton(
+                                                    Button(
                                                       onPressed: () {
                                                         Navigator.pop(context);
                                                       },

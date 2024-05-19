@@ -4,12 +4,23 @@ import 'package:get/get.dart';
 import 'package:sale_safe/utils/controller/base_controller.dart';
 import 'package:sale_safe/utils/utils.dart';
 
-class ExpenseTable extends StatelessWidget {
+class ExpenseTable extends fluent_ui.StatefulWidget {
  
-  final ExpenseController expenseController = Get.put(ExpenseController());
 
    ExpenseTable({Key? key}) : super(key: key);
 
+  @override
+  fluent_ui.State<ExpenseTable> createState() => _ExpenseTableState();
+}
+
+class _ExpenseTableState extends fluent_ui.State<ExpenseTable> {
+  final ExpenseController expenseController = Get.put(ExpenseController());
+ @override
+  void initState() {
+    expenseController.fetchByDate(DateTime.now());
+
+    super.initState();
+  }
   @override
   Widget build(BuildContext context) {
     return Container(

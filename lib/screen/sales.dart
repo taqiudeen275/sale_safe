@@ -175,7 +175,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                                               bytes: await doc
                                                                   .save(),
                                                               filename:
-                                                                  '${invoice.invoice_number}_invoice.pdf');
+                                                                  'Ayaame Smart Enterprise ${invoice.invoice_number}_invoice.pdf');
                                                         },
                                                       ),
                                                       Button(
@@ -232,79 +232,76 @@ class _SalesScreenState extends State<SalesScreen> {
                                           wrappedItem: CommandBarButton(
                                             icon: const Icon(FluentIcons.view),
                                             label: const Text('View Reciept'),
-                                            onPressed: !sale.plInvoices!.any(
-                                                    (element) =>
-                                                        element.salesId ==
-                                                        sale.id)
-                                                ? null
-                                                : () async {
-                                                    Invoice? invoice =
-                                                        await invoiceController
-                                                            .getBySaleId(
-                                                                sale.id!);
-                                                    // ignore: use_build_context_synchronously
-                                                    bigActionModal(
-                                                        context,
-                                                        const Text("Reciept"),
-                                                        SingleChildScrollView(
-                                                            child: ReceiptWidget(
-                                                                receiptNumber: invoice!
-                                                                    .invoice_number
-                                                                    .toString(),
-                                                                receiptDate:
-                                                                    invoice
-                                                                        .date!,
-                                                                to: invoice
-                                                                    .customer_name!,
-                                                                receiptItems: sale
-                                                                    .plOrders!)),
-                                                        [
-                                                          FilledButton(
-                                                              child: const Text(
-                                                                  "Print"),
-                                                              onPressed:
-                                                                  () async {
-                                                                      final doc =
-                                                              pw.Document();
-
-                                                          doc.addPage(
-                                                            pw.Page(
-                                                              pageFormat:
-                                                                  PdfPageFormat
-                                                                      .a4,
-                                                              build: (pw.Context
-                                                                  context) {
-                                                                return buildRecieptPdf(
-                                                                    receiptNumber: invoice
-                                                                        .invoice_number
-                                                                        .toString(),
+                                            onPressed:
+                                                !sale.plInvoices!.any(
+                                                        (element) =>
+                                                            element.salesId ==
+                                                            sale.id)
+                                                    ? null
+                                                    : () async {
+                                                        Invoice? invoice =
+                                                            await invoiceController
+                                                                .getBySaleId(
+                                                                    sale.id!);
+                                                        // ignore: use_build_context_synchronously
+                                                        bigActionModal(
+                                                            context,
+                                                            const Text(
+                                                                "Reciept"),
+                                                            SingleChildScrollView(
+                                                                child: ReceiptWidget(
+                                                                    receiptNumber:
+                                                                        invoice!
+                                                                            .invoice_number
+                                                                            .toString(),
                                                                     receiptDate:
                                                                         invoice
                                                                             .date!,
                                                                     to: invoice
                                                                         .customer_name!,
                                                                     receiptItems:
-                                                                        sale.plOrders!);
-                                                              },
-                                                            ),
-                                                          );
+                                                                        sale.plOrders!)),
+                                                            [
+                                                              FilledButton(
+                                                                  child: const Text(
+                                                                      "Print"),
+                                                                  onPressed:
+                                                                      () async {
+                                                                    final doc =
+                                                                        pw.Document();
 
-                                                          await Printing.sharePdf(
-                                                              bytes: await doc
-                                                                  .save(),
-                                                              filename:
-                                                                  '${invoice.invoice_number}_reciept.pdf');
- 
+                                                                    doc.addPage(
+                                                                      pw.Page(
+                                                                        pageFormat:
+                                                                            PdfPageFormat.a4,
+                                                                        build: (pw
+                                                                            .Context
+                                                                            context) {
+                                                                          return buildRecieptPdf(
+                                                                              receiptNumber: invoice.invoice_number.toString(),
+                                                                              receiptDate: invoice.date!,
+                                                                              to: invoice.customer_name!,
+                                                                              receiptItems: sale.plOrders!);
+                                                                        },
+                                                                      ),
+                                                                    );
+
+                                                                    await Printing.sharePdf(
+                                                                        bytes: await doc
+                                                                            .save(),
+                                                                        filename:
+                                                                            'Ayaame Smart Enterprise ${invoice.invoice_number}_reciept.pdf');
                                                                   }),
-                                                          Button(
-                                                              child: const Text(
-                                                                  "Close"),
-                                                              onPressed: () {
-                                                                Navigator.pop(
-                                                                    context);
-                                                              })
-                                                        ]);
-                                                  },
+                                                              Button(
+                                                                  child: const Text(
+                                                                      "Close"),
+                                                                  onPressed:
+                                                                      () {
+                                                                    Navigator.pop(
+                                                                        context);
+                                                                  })
+                                                            ]);
+                                                      },
                                           ),
                                         ),
                                       ],

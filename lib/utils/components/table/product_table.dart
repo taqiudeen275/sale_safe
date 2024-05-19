@@ -109,32 +109,30 @@ class _ProductTableViewState extends State<ProductTableView> {
           ],
         );
       } else {
-        return Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text('No Product available'),
-              const SizedBox(
-                height: 10,
-              ),
-              material_ui.FilledButton.tonal(
-                child: const Text("Add Product"),
-                onPressed: () {
-                  actionModal(
-                    context,
-                    const Text('Add Product'),
-                    const ProductAdd(),
-                    [
-                      FilledButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text("Close"))
-                    ],
-                  ); // Replace with your product form widget
-                },
-              ),
-            ],
-          ),
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text('No Product available'),
+            const SizedBox(
+              height: 10,
+            ),
+            material_ui.FilledButton.tonal(
+              child: const Text("Add Product"),
+              onPressed: () {
+                actionModal(
+                  context,
+                  const Text('Add Product'),
+                  const ProductAdd(),
+                  [
+                    FilledButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("Close"))
+                  ],
+                ); // Replace with your product form widget
+              },
+            ),
+          ],
         );
       }
     });

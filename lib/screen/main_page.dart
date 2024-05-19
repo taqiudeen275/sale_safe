@@ -38,6 +38,7 @@ class _MainPageState extends State<MainPage> {
         icon: const Icon(Iconsax.receipt),
         body: const ExpenseScreen()),
     PaneItem(
+      
         title: const Text('Suppliers'),
         icon: const Icon(FluentIcons.business_card),
         body: const SuppplierScreen()),

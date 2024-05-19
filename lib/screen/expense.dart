@@ -15,12 +15,7 @@ class ExpenseScreen extends StatefulWidget {
 class _ExpenseScreenState extends State<ExpenseScreen> {
   final ExpenseController expenseController = Get.put(ExpenseController());
   DateTime? selectedDate;
-  @override
-  void initState() {
-    expenseController.fetchByDate(DateTime.now());
 
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {

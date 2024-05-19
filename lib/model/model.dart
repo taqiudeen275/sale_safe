@@ -169,21 +169,6 @@ const tableSales = SqfEntityTable(
 
 
 
-// Profit and Loss Table
-const tableProfitAndLoss = SqfEntityTable(
-    tableName: 'profitAndLoss',
-    primaryKeyName: 'id',
-    primaryKeyType: PrimaryKeyType.integer_auto_incremental,
-    useSoftDeleting: true,
-    modelName: "profitAndLoss",
-    fields: [
-      SqfEntityField("revenue", DbType.real),
-      SqfEntityField("cost", DbType.real),
-      SqfEntityField("expense", DbType.real),
-      SqfEntityField("profit", DbType.real),
-      SqfEntityField("date", DbType.datetime),
-    ]);
-
 // For Keeping track of changes in product
 
 const tableProductRecords = SqfEntityTable(
@@ -227,6 +212,7 @@ const seqIdentity = SqfEntitySequence(
 const myDbModel = SqfEntityModel(
   modelName: 'SalesSafeDbModel', // optional
   databaseName: 'sales_safe.db',
+  
   // put defined tables into the tables list.
   databaseTables: [
     tableProduct,
@@ -238,7 +224,6 @@ const myDbModel = SqfEntityModel(
     tablePayment,
     tableSales,
     tableExpense,
-    tableProfitAndLoss,
     tableProductRecords
   ],
  

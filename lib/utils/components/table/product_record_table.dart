@@ -29,38 +29,38 @@ class ProductRecordTable extends StatelessWidget {
         ...records.map(
           (record) => TableRow(
             children: [
-              Padding(
+              TableCell(child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: TableCell(child: Text(record.action ?? "-")),
-              ),
-              Padding(
+                child: Text(record.action ?? "-"),
+              )),
+              TableCell(child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: TableCell(child: Text(record.currentQuantity ?? "-")),
-              ),
-              Padding(
+                child: Text(record.currentQuantity ?? "-"),
+              )),
+              TableCell(child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: TableCell(child: Text(record.previousQuantity ?? "-")),
-              ),
-              Padding(
+                child: Text(record.previousQuantity ?? "-"),
+              )),
+              TableCell(child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: TableCell(child: Text(record.currentCost ?? "-")),
-              ),
-              Padding(
+                child: Text(record.currentCost ?? "-"),
+              )),
+              TableCell(child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: TableCell(child: Text(record.previousCost ?? "-")),
-              ),
-              Padding(
+                child: Text(record.previousCost ?? "-"),
+              )),
+              TableCell(child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: TableCell(child: Text(record.currentCurrent ?? "-")),
-              ),
-              Padding(
+                child: Text(record.currentCurrent ?? "-"),
+              )),
+              TableCell(child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: TableCell(child: Text(record.previousPrice ?? "-")),
-              ),
-              Padding(
+                child: Text(record.previousPrice ?? "-"),
+              )),
+              TableCell(child: Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: TableCell(child: Text( record.date != null ? formatDateTime(record.date!) : "-")),
-              ),
+                child: Text( record.date != null ? formatDateTime(record.date!) : "-"),
+              )),
             ],
           ),
         ),

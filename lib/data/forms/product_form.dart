@@ -76,13 +76,12 @@ class _ProductFormState extends State<ProductAdd> {
                 controller: _descriptionController,
                 placeholder: 'Enter product description ',
                 maxLines: 3,
-                   validator: (value) {
+                validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter product name';
                   }
-                  if (value.length < 10){
+                  if (value.length < 10) {
                     return 'Please description must be at least 10 characters';
-
                   }
                   return null;
                 },
@@ -100,6 +99,10 @@ class _ProductFormState extends State<ProductAdd> {
                   if (value == null || value.isEmpty) {
                     return 'Please enter product cost';
                   }
+                  if (double.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
+
                   return null;
                 },
               ),
@@ -116,6 +119,9 @@ class _ProductFormState extends State<ProductAdd> {
                   if (value == null || value.isEmpty) {
                     return 'Please enter product price';
                   }
+                  if (double.tryParse(value) == null) {
+                    return 'Please enter a valid number';
+                  }
                   return null;
                 },
               ),
@@ -131,6 +137,9 @@ class _ProductFormState extends State<ProductAdd> {
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter product quantity';
+                  }
+                  if (int.tryParse(value) == null) {
+                    return 'Please enter a valid number';
                   }
                   return null;
                 },
@@ -161,13 +170,6 @@ class _ProductFormState extends State<ProductAdd> {
 
     // Check if update or create based on passed product
     if (widget.product != null) {
-      Product model = widget.product!;
-      model.name = name;
-      model.description = description;
-      model.cost = cost;
-      model.price = price;
-      model.quantity = quantity;
-      productController.updateModel(model);
       await ProductRecord(
               action: "update",
               productId: widget.product!.id,
@@ -176,22 +178,28 @@ class _ProductFormState extends State<ProductAdd> {
               currentQuantity: quantity.toString(),
               currentCost: cost.toString(),
               currentCurrent: price.toString(),
-              previousCost: widget.product!.cost.toString(),
-              previousPrice: widget.product!.price.toString(),
+              previousCost: widget.product?.cost.toString(),
+              previousPrice: widget.product?.price.toString(),
               name: widget.product!.name)
           .save();
+      Product model = widget.product!;
+      model.name = name;
+      model.description = description;
+      model.cost = cost;
+      model.price = price;
+      model.quantity = quantity;
+      productController.updateModel(model);
     } else {
-      Product model = Product(
+      int? modelID = await Product(
         name: name,
         description: description,
         cost: cost,
         price: price,
         quantity: quantity,
-      );
-      await productController.addModel(model);
+      ).save();
       await ProductRecord(
               action: "added",
-              productId: productController.models.last.id,
+              productId: modelID,
               date: DateTime.now(),
               previousQuantity: quantity.toString(),
               currentQuantity: quantity.toString(),

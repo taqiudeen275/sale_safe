@@ -1,4 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
 
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:get/get.dart';
@@ -26,7 +25,6 @@ class _ProductScreenState extends State<ProductScreen> {
   @override
   void initState() {
     _productSearchController.text = "";
-
     super.initState();
   }
 
@@ -205,12 +203,14 @@ class _ProductScreenState extends State<ProductScreen> {
                                                   const Text("Update Product"),
                                                   ProductAdd(
                                                       product: (product)),
-                                                  [Button(
+                                                  [
+                                                    Button(
                                                       onPressed: () {
                                                         Navigator.pop(context);
                                                       },
                                                       child: const Text("No"),
-                                                    ),],
+                                                    ),
+                                                  ],
                                                 );
                                               },
                                               icon: const Icon(Iconsax.edit)),
@@ -275,7 +275,8 @@ class _ProductScreenState extends State<ProductScreen> {
             FilledButton(
                 child: const Text("Login"),
                 onPressed: () {
-                  actionModal(context, const Text("Login"), const PassWordChecker(), [
+                  actionModal(
+                      context, const Text("Login"), const PassWordChecker(), [
                     Button(
                         child: const Text("Close"),
                         onPressed: () {

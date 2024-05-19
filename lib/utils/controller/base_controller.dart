@@ -350,8 +350,8 @@ class ExpenseController extends BaseSqfEntityController<Expense> {
 
   Future<void> fetchByDate(DateTime date) async {
     isLoading.value = true;
-
-    var res = await Expense().select().toList(preload: true);
+  
+    var res = models;
     List<Expense> filtered = [];
     for (Expense expense in res) {
       if (isSameDate(expense.date!, date)) {
@@ -366,9 +366,9 @@ class ExpenseController extends BaseSqfEntityController<Expense> {
   Future<void> fetchModels() async {
     isLoading.value = true;
 
-    models.value = await Expense().select().toList();
+    models.value = await Expense().select().toList(preload: true);
     resetSelected();
-    isLoading.value = true;
+    isLoading.value = false;
 
     return super.fetchModels();
   }
@@ -437,35 +437,6 @@ class SaleController extends BaseSqfEntityController<Sale> {
   }
 }
 
-// ProfitAndLossController
-class ProfitAndLossController extends BaseSqfEntityController<ProfitAndLoss> {
-  RxBool isSelected = false.obs;
-  RxList selectedID = [].obs;
-
-  @override
-  Future<void> fetchModels() async {
-    models.value = await ProfitAndLoss().select().toList();
-    resetSelected();
-    return super.fetchModels();
-  }
-
-  Future<void> deleteById(int id) async {
-    await ProfitAndLoss().select().id.equals(id).delete();
-    await fetchModels();
-  }
-
-  void resetSelected() {
-    isSelected.value = false;
-    selectedID.value = [];
-  }
-
-  Future<void> deleteBulkByID(List modelsToDelete) async {
-    for (final model in modelsToDelete) {
-      await deleteById(model);
-    }
-    await fetchModels();
-  }
-}
 // Users contriller
 
 class UtilityController extends GetxController {

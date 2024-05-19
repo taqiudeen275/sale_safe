@@ -54,7 +54,6 @@ class ProductsDataData extends SqfEntityDBTableDataSource {
         FilledButton(
           onPressed: () async {
             await productController.deleteModel(itemToDelete);
-            Get.back();
             // ignore: use_build_context_synchronously
             Navigator.pop(context);
           },
@@ -93,14 +92,17 @@ class ProductsDataData extends SqfEntityDBTableDataSource {
     bigActionModal(
       context,
       const Text("Product Details"),
-      SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (productRecord.isNotEmpty)
-              ProductRecordTable(records: productRecord),
-            if (productRecord.isEmpty) const Text("No Product records")
-          ],
+      SizedBox(
+        height: MediaQuery.of(context).size.height,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (productRecord.isNotEmpty)
+                ProductRecordTable(records: productRecord),
+              if (productRecord.isEmpty) const Text("No Product records")
+            ],
+          ),
         ),
       ),
       [

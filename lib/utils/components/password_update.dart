@@ -49,7 +49,43 @@ class _PasswordUpdateState extends State<PasswordUpdate> {
               );
             },
           );
-        } else {}
+        } else {
+           showDialog(
+            context: context,
+            builder: (context) {
+              return ContentDialog(
+                title: const Text('Password do not match'),
+                content: const Text('Password update not successfully.'),
+                actions: [
+                  Button(
+                    child: const Text('OK'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
+        }
+      }else{
+            showDialog(
+            context: context,
+            builder: (context) {
+              return ContentDialog(
+                title: const Text('Wrong password'),
+                content: const Text('You have entered a wrong Passwod'),
+                actions: [
+                  Button(
+                    child: const Text('OK'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              );
+            },
+          );
       }
 
       // Clear the text fields after successful update
@@ -145,6 +181,7 @@ class _PassWordCheckerState extends State<PassWordChecker> {
     return Form(
       key: _formKey,
       autovalidateMode: AutovalidateMode.onUserInteraction,
+      
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -152,6 +189,8 @@ class _PassWordCheckerState extends State<PassWordChecker> {
             obscureText: true,
             placeholder: 'Enter your Admin Password to access this page',
             controller: _nameController,
+            autofocus: true,
+            
           ),
           const SizedBox(height: 8.0),
           const SizedBox(height: 16.0),

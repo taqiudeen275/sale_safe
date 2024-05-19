@@ -2,9 +2,14 @@ import 'package:fluent_ui/fluent_ui.dart';
 import 'package:sale_safe/data/forms/suppliers_form.dart';
 import 'package:sale_safe/utils/components/table/supplier_table.dart';
 
-class SuppplierScreen extends StatelessWidget {
+class SuppplierScreen extends StatefulWidget {
   const SuppplierScreen({super.key});
 
+  @override
+  State<SuppplierScreen> createState() => _SuppplierScreenState();
+}
+
+class _SuppplierScreenState extends State<SuppplierScreen> {
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -41,9 +46,9 @@ class SuppplierScreen extends StatelessWidget {
         ),
         SizedBox(
           height: MediaQuery.of(context).size.height * 0.8,
-          child:  SingleChildScrollView(
+          child:  const SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
+              padding: EdgeInsets.symmetric(horizontal: 40),
               child: SuppliersTable(),
             ),
           ),

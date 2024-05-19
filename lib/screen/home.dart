@@ -1,5 +1,6 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:get/get.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:sale_safe/data/forms/expense_form.dart';
 import 'package:sale_safe/data/forms/product_form.dart';
 import 'package:sale_safe/data/forms/suppliers_form.dart';
@@ -45,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
         expenseController.expenseByDate.fold(
             0.0, (previousValue, element) => previousValue + element.amount!);
       if (productController.isLoading.value) {
-        return const Expanded(child: Center(child: ProgressRing()));
+        return const Center(child: Center(child: ProgressRing()));
       } else {
         return SingleChildScrollView(
           child: Padding(
@@ -74,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: w,
                           ),
                           wrappedItem: CommandBarButton(
-                            icon: const Icon(FluentIcons.add),
+                            icon: const Icon(Iconsax.dollar_square),
                             label: const Text('Record Sale'),
                             onPressed: () {
                               bigActionModal(context, const Text("Add Sale"),
@@ -107,11 +108,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         CommandBarBuilderItem(
                           builder: (context, mode, w) => Tooltip(
-                            message: "Add an expense!",
+                            message: "Add an expense",
                             child: w,
                           ),
                           wrappedItem: CommandBarButton(
-                            icon: const Icon(FluentIcons.add),
+                            icon: const Icon(Iconsax.receipt),
                             label: const Text('Add Expense'),
                             onPressed: () {
                               showDialog(
@@ -123,17 +124,49 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         CommandBarBuilderItem(
                           builder: (context, mode, w) => Tooltip(
-                            message: "Add a supplier!",
+                            message: "Add a supplier",
                             child: w,
                           ),
                           wrappedItem: CommandBarButton(
-                            icon: const Icon(FluentIcons.add),
+                            icon: const Icon(FluentIcons.business_card),
                             label: const Text('Add Supplier'),
                             onPressed: () {
                               showDialog(
                                 context: context,
                                 builder: (context) => const AddSupplier(),
                               );
+                            },
+                          ),
+                        ),
+                             CommandBarBuilderItem(
+                          builder: (context, mode, w) => Tooltip(
+                            message: "Add an Product",
+                            child: w,
+                          ),
+                          wrappedItem: CommandBarButton(
+                            icon: utilController.isAuthenticated.value? const Icon(Iconsax.box) : const Icon(Iconsax.grid_lock),
+                            label:  Text(utilController.isAuthenticated.value? 'Add Product': "Unlock to add product"),
+                            onPressed: () {
+                              if (utilController
+                                          .isAuthenticated.value) {
+                                        actionModal(
+                                          context,
+                                          const Text("Add Product"),
+                                          const ProductAdd(),
+                                          [],
+                                        );
+                                      } else {
+                                        actionModal(
+                                            context,
+                                            const Text("Login"),
+                                            const PassWordChecker(), [
+                                          Button(
+                                              child: const Text("Close"),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              })
+                                        ]);
+                                      }
                             },
                           ),
                         ),

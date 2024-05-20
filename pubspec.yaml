@@ -37,7 +37,7 @@ dependencies:
   cupertino_icons: ^1.0.2
   get: ^4.6.5
   iconsax: ^0.0.8
-  sqlite3: ^2.1.0
+  sqlite3: ^2.4.0
   sqfentity: ^2.4.0
   sqfentity_gen: ^2.4.0
   flutter_datetime_picker_plus: ^2.1.0
@@ -49,6 +49,7 @@ dependencies:
   pdf: ^3.10.8
   path_provider: ^2.0.11
   get_storage: ^2.1.1
+  sqflite_common_ffi: ^2.3.2+1
 
 dev_dependencies:
   flutter_test:

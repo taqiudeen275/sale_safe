@@ -153,7 +153,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                           context,
                                           const Text("Add Product"),
                                           const ProductAdd(),
-                                          [],
+                                          [ Button(
+                                              child: const Text("Close"),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              })],
                                         );
                                       } else {
                                         actionModal(
@@ -345,7 +349,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                           context,
                                           const Text("Update Product"),
                                           ProductAdd(product: (e)),
-                                          [],
+                                          [ Button(
+                                              child: const Text("Close"),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              })],
                                         );
                                       } else {
                                         actionModal(

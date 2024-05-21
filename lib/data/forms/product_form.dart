@@ -78,11 +78,9 @@ class _ProductFormState extends State<ProductAdd> {
                 maxLines: 3,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter product name';
+                    return 'Please enter product description';
                   }
-                  if (value.length < 10) {
-                    return 'Please description must be at least 10 characters';
-                  }
+                
                   return null;
                 },
               ),

@@ -25,20 +25,30 @@ class _SalesScreenState extends State<SalesScreen> {
   final ProductController productController = Get.put(ProductController());
   final SaleController salesController = Get.put(SaleController());
   final InvoiceController invoiceController = Get.put(InvoiceController());
+  final ExpenseController expenseController = Get.put(ExpenseController());
 
   final OrderController orderController = Get.put(OrderController());
   RxBool isCredit = false.obs;
   DateTime? selectedDate;
+  RxDouble revenue = 0.0.obs;
+
+
   @override
   void initState() {
     salesController.fetchByDate(DateTime.now());
+    expenseController.fetchByDate(DateTime.now());
 
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() => Column(
+    return Obx((){
+        revenue.value = salesController.salesByDate.fold(
+            0.0, (previousValue, element) => previousValue + element.amount!) -
+        expenseController.expenseByDate.fold(
+            0.0, (previousValue, element) => previousValue + element.amount!);
+      return Column(
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -80,12 +90,24 @@ class _SalesScreenState extends State<SalesScreen> {
                           orderController: orderController),
                     ],
                   ),
-                  Text(
-                    selectedDate != null
-                        ? "${formatDateTime(selectedDate!, dateOnly: true) == formatDateTime(DateTime.now(), dateOnly: true) ? 'TODAY\'S' : formatDateTime(selectedDate!, dateOnly: true)} Sales"
-                        : "TODAY'S SALES",
-                    style: const TextStyle(
-                        fontSize: 30, fontWeight: FontWeight.bold),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        selectedDate != null
+                            ? "${formatDateTime(selectedDate!, dateOnly: true) == formatDateTime(DateTime.now(), dateOnly: true) ? 'TODAY\'S' : formatDateTime(selectedDate!, dateOnly: true)} Sales"
+                            : "TODAY'S SALES",
+                        style: const TextStyle(
+                            fontSize: 30, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                              "TOTAL REVENUE GH¢  ${revenue.value.toStringAsFixed(2)}",
+                              style:  TextStyle(
+                                  fontSize: 45,
+                                  fontWeight: FontWeight.w900,
+                                  color:revenue.value.isNegative? Colors.red :Colors.successPrimaryColor),
+                            )
+                    ],
                   )
                 ],
               ),
@@ -454,7 +476,7 @@ class _SalesScreenState extends State<SalesScreen> {
               ),
             ),
           ],
-        ));
+        );});
   }
 }
 

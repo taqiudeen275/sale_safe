@@ -121,13 +121,6 @@ class _OrderPickState extends State<OrderPick> {
                                             const SizedBox(
                                               width: 40,
                                             ),
-                                            Text(
-                                              
-                                              "${product.description!.substring(0,10)}...",
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.w100),
-                                                
-                                            ),
                                             const SizedBox(
                                               width: 20,
                                             ),
@@ -194,12 +187,7 @@ class _OrderPickState extends State<OrderPick> {
                                                 const SizedBox(
                                                   width: 40,
                                                 ),
-                                                Text(
-                                                  "${product.description!.substring(0,10)}...",
-                                                  style: const TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.w100),
-                                                ),
+                                                
                                                 const SizedBox(
                                                   width: 20,
                                                 ),
@@ -275,11 +263,7 @@ class _OrderPickState extends State<OrderPick> {
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 16),
                                             ),
-                                            Text(
-                                              "${product.description!.substring(0,10)}...",
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.w100),
-                                            ),
+                                          
                                             Container(
                                               padding:
                                                   const EdgeInsets.symmetric(

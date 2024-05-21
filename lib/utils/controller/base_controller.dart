@@ -443,7 +443,9 @@ class UtilityController extends GetxController {
   final box = GetStorage();
   RxBool isAuthenticated = false.obs;
   String get getAdminPass => box.read('adminpass') ?? "1234";
+  String get addDefaultProduct => box.read('addDefaultProduct') ?? "yes";
   void setAdminPass(String val) => box.write('adminpass', val);
+  void setaddDefaultProduct(String val) => box.write('addDefaultProduct', val);
   bool authenticate(String pass) {
     if (getAdminPass == pass) {
       isAuthenticated.value = true;

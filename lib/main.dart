@@ -6,6 +6,7 @@ import 'package:window_manager/window_manager.dart';
 void main() async {
 
   await GetStorage.init();
+  await windowManager.ensureInitialized();
   WindowOptions windowOptions = const WindowOptions(
     minimumSize: Size(1200, 800),
     center: true,

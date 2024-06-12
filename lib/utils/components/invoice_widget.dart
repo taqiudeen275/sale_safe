@@ -23,10 +23,10 @@ class InvoiceWidget extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Text(
-            'AYAAME SMART ENTERPRISE',
+            'ADOMEX PLUS CHEMICALS AND MEDICAL DIAGNOSTICS CENTRE ',
             style: TextStyle(
               fontSize: 30.0,
-              color: Colors.blueAccent,
+              color: Colors.greenAccent,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -45,15 +45,15 @@ class InvoiceWidget extends StatelessWidget {
             style: TextStyle(fontSize: 14.0),
           ),
           const Text(
-            'LOCATION: Off the Sakogu Road, 200meters to the GAP filling station',
+            'LOCATION: Daboya - Busunu Rd, Northern Region',
             style: TextStyle(fontSize: 14.0),
           ),
           const Text(
-            'EMAIL: danaadum59@gmail.com',
+            'EMAIL: adomexenterprise@gmail.com',
             style: TextStyle(fontSize: 14.0),
           ),
           const Text(
-            'CONTACT: 0548715659, 0247444811',
+            'CONTACT: 0248478492 , 0246652103',
             style: TextStyle(fontSize: 14.0),
           ),
           const SizedBox(height: 16.0),

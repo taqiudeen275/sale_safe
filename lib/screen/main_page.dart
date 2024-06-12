@@ -58,13 +58,13 @@ class _MainPageState extends State<MainPage> {
           PaneItem(
             icon: const Icon(Iconsax.setting_4),
             title: const Text('Settings'),
-            body: SettingsScreen(),
+            body: const SettingsScreen(),
           ),
           PaneItemAction(
             icon: const Icon(FluentIcons.info),
             title: const Text('About'),
             onTap: () {
-              bigActionModal(
+              actionModal(
                 context,
                     const Text('About'),
               const AboutWidget(),
